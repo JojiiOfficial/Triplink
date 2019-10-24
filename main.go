@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 )
 
 func main() {
@@ -37,6 +38,8 @@ func main() {
 
 //LogEntry a entry in log
 type LogEntry struct {
+	Time                                           time.Time
+	In, Out, Mac, Src, Dst, Len, TTL, ID, Protocol string
 }
 
 func parseLogEntry(content string) (*LogEntry, error) {
