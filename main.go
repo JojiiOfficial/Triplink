@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -22,20 +23,44 @@ func main() {
 		fmt.Println("Error reading logfile!")
 		return
 	}
-	defer logFile.Close()
 
 	scanner := bufio.NewScanner(logFile)
 	scanner.Split(bufio.ScanLines)
-
+	logs := ""
 	for scanner.Scan() {
 		line := scanner.Text()
+		if len(strings.Trim(line, " ")) == 0 {
+			continue
+		}
 		logEntry, err := parseLogEntry(line)
 		if err != nil {
 			fmt.Println("Couldn't parse le (" + err.Error() + "): " + line)
 			continue
 		}
+		logs += line
 		fmt.Println(*logEntry)
 	}
+
+	logFile.Close()
+
+	if len(logs) > 0 {
+		appendLogs(logFilePath+"_1", logs)
+	}
+
+	runCommand(nil, "echo -n > "+logFilePath)
+
+}
+
+func appendLogs(newf, logs string) {
+	file, err := os.OpenFile(newf, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 755)
+	if err != nil {
+		panic(err)
+	}
+	_, err = file.WriteString(logs + "\n")
+	if err != nil {
+		panic(err)
+	}
+	file.Close()
 }
 
 //LogEntry a entry in log
@@ -96,4 +121,16 @@ func parseItem(item string) (string, string, error) {
 		return "", "", errors.New("no data given")
 	}
 	return data[0], data[1], nil
+}
+
+func runCommand(errorHandler func(error, string), sCmd string) (outb string, err error) {
+	out, err := exec.Command("su", "-c", sCmd).Output()
+	output := string(out)
+	if err != nil {
+		if errorHandler != nil {
+			errorHandler(err, sCmd)
+		}
+		return "", err
+	}
+	return output, nil
 }
