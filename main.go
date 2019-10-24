@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -29,7 +31,7 @@ func main() {
 		line := scanner.Text()
 		logEntry, err := parseLogEntry(line)
 		if err != nil {
-			fmt.Println("Couldn't parse le: " + line)
+			fmt.Println("Couldn't parse le (" + err.Error() + "): " + line)
 			continue
 		}
 		_ = logEntry
@@ -43,5 +45,8 @@ type LogEntry struct {
 }
 
 func parseLogEntry(content string) (*LogEntry, error) {
+	if !strings.Contains(content, "Tripwire") {
+		return nil, errors.New("no tripwire log")
+	}
 	return nil, nil
 }
