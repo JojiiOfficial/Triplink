@@ -78,8 +78,7 @@ func parseLogEntry(content string) (*LogEntry, error) {
 	for _, val := range logItems {
 		handleLogEntry(val, entry)
 	}
-	dateString := logItems[0] + " " + logItems[1] + " " + logItems[2]
-	t, _ := time.Parse(time.Stamp, dateString)
+	t, _ := time.Parse(time.Stamp, logItems[0]+" "+logItems[1]+" "+logItems[2])
 	t = t.AddDate(time.Now().Year(), 0, 0)
 	entry.Time = t
 	return entry, nil
