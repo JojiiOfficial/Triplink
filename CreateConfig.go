@@ -22,7 +22,12 @@ var createConfCMD = &cli.Command{
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*newConfT)
 
-		logStatus, configFile := createAndValidateConfigFile(argv.LogFile)
+		logFileExists := validateLogFile(argv.LogFile)
+		if !logFileExists {
+			fmt.Println("Logfile doesn't exists")
+			return nil
+		}
+		logStatus, configFile := createAndValidateConfigFile()
 		if logStatus == 0 {
 			createConf(configFile, argv, false)
 		} else if logStatus == 1 {

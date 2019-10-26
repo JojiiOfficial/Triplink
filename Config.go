@@ -47,12 +47,15 @@ func saveConfig(configFile string, config *Config) error {
 	return nil
 }
 
-func createAndValidateConfigFile(logfile string) (int, string) {
+func validateLogFile(logfile string) bool {
 	_, err := os.Stat(logfile)
 	if err != nil {
-		fmt.Println("Logfile doesn't exists")
-		return -1, ""
+		return false
 	}
+	return true
+}
+
+func createAndValidateConfigFile() (int, string) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("Couldn't retrieve homeDir!")
