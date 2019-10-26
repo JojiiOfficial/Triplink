@@ -98,7 +98,7 @@ var reportCMD = &cli.Command{
 			panic(err)
 		}
 
-		_ = js
+		request(config.Host+"/report", js)
 
 		return nil
 	},
