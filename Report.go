@@ -96,18 +96,26 @@ var reportCMD = &cli.Command{
 			ipsToReport = append(ipsToReport, IPset{ip, reason})
 		}
 
-		reportStruct := ReportIPStruct{Token: config.Token, Ips: ipsToReport}
+		if len(ipsToReport) > 0 {
 
-		js, err := json.Marshal(reportStruct)
-		if err != nil {
-			panic(err)
-		}
+			reportStruct := ReportIPStruct{Token: config.Token, Ips: ipsToReport}
 
-		resp, err := request(config.Host+"/report", js)
-		if err != nil {
-			fmt.Println("error making request: " + err.Error())
+			js, err := json.Marshal(reportStruct)
+			if err != nil {
+				panic(err)
+			}
+
+			resp, err := request(config.Host+"/report", js)
+			if err != nil {
+				fmt.Println("error making request: " + err.Error())
+			} else {
+				fmt.Println(resp)
+			}
+
+			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
+			runCommand(nil, "echo -n > "+config.LogFile)
 		} else {
-			fmt.Println(resp)
+			fmt.Println("Nothing to do")
 		}
 
 		return nil
