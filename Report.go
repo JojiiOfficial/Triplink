@@ -80,9 +80,10 @@ var reportCMD = &cli.Command{
 			}
 		})
 
-		for _, t := range ipTime {
+		ipsToReport := []IPset{}
+		for ip, t := range ipTime {
 			reason := IPrequestTimesToReason(t)
-			fmt.Println(t, reason)
+			ipsToReport = append(ipsToReport, IPset{ip, reason})
 		}
 
 		if err != nil {
