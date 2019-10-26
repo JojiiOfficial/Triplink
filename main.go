@@ -17,7 +17,7 @@ var root = &cli.Command{
 	Desc: "this is root command",
 	Argv: func() interface{} { return new(argT) },
 	Fn: func(ctx *cli.Context) error {
-		fmt.Println("Usage: trreporter <report> [-f,-h]")
+		fmt.Println("Usage: twreporter <report> [-f,-h]")
 		return nil
 	},
 }
