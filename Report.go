@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	iptablesparser "github.com/JojiiOfficial/Iptables-log-parser"
 	"github.com/mkideal/cli"
@@ -68,14 +69,104 @@ var reportCMD = &cli.Command{
 			return nil
 		}
 
-		fmt.Println("reading conf: ", config.LogFile)
+		fmt.Println("using log: ", config.LogFile)
+		ipTime := make(map[string]([]time.Time))
 		err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
-			fmt.Println(*log)
+			_, has := ipTime[log.Src]
+			if has {
+				ipTime[log.Src] = append(ipTime[log.Src], log.Time)
+			} else {
+				ipTime[log.Src] = append([]time.Time{}, log.Time)
+			}
 		})
+
+		for _, t := range ipTime {
+			reason := IPrequestTimesToReason(t)
+			fmt.Println(t, reason)
+		}
+
 		if err != nil {
-			panic(err)
+			fmt.Println("Can't read File: ", err.Error())
 		}
 
 		return nil
 	},
+}
+
+const maxCountToBrute int = 20
+
+//IPrequestTimesToReason returns a reason based on the frequency of connect attempts
+func IPrequestTimesToReason(timeList []time.Time) int {
+	if len(timeList) == 0 {
+		return -1
+	} else if len(timeList) <= 6 {
+		//return Scanner
+		return 1
+	}
+
+	bruteToleranceLine := (int)(len(timeList) / 9)
+
+	lastPing := timeList[0]
+	spamCounter := 0
+	scanCounter := 0
+	bruteRow := 0
+	bruteTolerance := 0
+	for _, t := range timeList {
+		diff := t.Sub(lastPing).Minutes()
+		if diff < 1 {
+			bruteRow++
+		} else if diff <= 10 {
+			spamCounter++
+			if bruteRow < maxCountToBrute {
+				if bruteTolerance > bruteToleranceLine {
+					bruteRow = 0
+				} else {
+					bruteTolerance++
+				}
+			} else {
+				return 3
+			}
+		} else {
+			scanCounter++
+			if bruteRow < maxCountToBrute {
+				if bruteTolerance > bruteToleranceLine {
+					bruteRow = 0
+				} else {
+					bruteTolerance++
+				}
+			}
+		}
+		lastPing = t
+	}
+
+	if bruteRow >= 14 {
+		return 3
+	}
+
+	if spamCounter > 10 {
+		return 2
+	}
+
+	a, b := percentRelation(scanCounter, spamCounter)
+	if a > (b*1.85) && scanCounter < 15 {
+		return 1
+	}
+	return 2
+}
+
+func percentRelation(a, b int) (float32, float32) {
+	ges := a + b
+	if a+b == 0 {
+		return 0, 0
+	}
+	return (float32)(a * 100 / ges), (float32)(b * 100 / ges)
+}
+
+func avgTimeDiff(timeList []time.Time) float32 {
+	deltaTime := float32(0)
+	lastPing := timeList[0]
+	for _, t := range timeList {
+		deltaTime += float32(t.Sub(lastPing).Minutes())
+	}
+	return ((float32)(deltaTime) / float32(len(timeList)))
 }
