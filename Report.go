@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -80,15 +81,24 @@ var reportCMD = &cli.Command{
 			}
 		})
 
+		if err != nil {
+			fmt.Println("Can't read File: ", err.Error())
+		}
+
 		ipsToReport := []IPset{}
 		for ip, t := range ipTime {
 			reason := IPrequestTimesToReason(t)
 			ipsToReport = append(ipsToReport, IPset{ip, reason})
 		}
 
+		reportStruct := ReportIPStruct{Token: config.Token, Ips: ipsToReport}
+
+		js, err := json.Marshal(reportStruct)
 		if err != nil {
-			fmt.Println("Can't read File: ", err.Error())
+			panic(err)
 		}
+
+		_ = js
 
 		return nil
 	},
