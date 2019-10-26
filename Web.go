@@ -2,21 +2,19 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
-	"log"
+	"io/ioutil"
 	"net/http"
 )
 
-func request(url string, data []byte) (int, string) {
+func request(url string, data []byte) (string, error) {
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer([]byte(data)))
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
-	var result map[string]interface{}
-
-	json.NewDecoder(resp.Body).Decode(&result)
-
-	log.Println(result)
-	return 0, ""
+	d, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(d), nil
 }

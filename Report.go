@@ -98,7 +98,12 @@ var reportCMD = &cli.Command{
 			panic(err)
 		}
 
-		request(config.Host+"/report", js)
+		resp, err := request(config.Host+"/report", js)
+		if err != nil {
+			fmt.Println("error making request: " + err.Error())
+		} else {
+			fmt.Println(resp)
+		}
 
 		return nil
 	},
