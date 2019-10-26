@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	iptablesparser "github.com/JojiiOfficial/Iptables-log-parser"
 	"github.com/mkideal/cli"
 )
 
@@ -67,14 +68,14 @@ var reportCMD = &cli.Command{
 			return nil
 		}
 
+		fmt.Println("reading conf: ", config.LogFile)
+		err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
+			fmt.Println(*log)
+		})
+		if err != nil {
+			panic(err)
+		}
+
 		return nil
 	},
 }
-
-//examle for reading the file line by line
-// err := iptablesparser.ParseFileByLines("/var/log/Tripwire21", func(log *iptablesparser.LogEntry) {
-// 	fmt.Println(*log)
-// })
-// if err != nil {
-// 	panic(err)
-// }
