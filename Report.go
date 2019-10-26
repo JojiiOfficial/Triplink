@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	iptablesparser "github.com/JojiiOfficial/Iptables-log-parser"
@@ -23,6 +24,10 @@ var reportCMD = &cli.Command{
 	Argv:    func() interface{} { return new(reportT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*reportT)
+		if os.Getuid() != 0 {
+			fmt.Println("You need to be root!")
+			return nil
+		}
 		logStatus, configFile := createAndValidateConfigFile()
 		var config *Config
 		if logStatus < 0 {
