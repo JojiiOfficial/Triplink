@@ -10,58 +10,60 @@ import (
 
 type backupT struct {
 	cli.Helper
+	BackupIPtables bool `cli:"t,iptables" usage:"Update iptables" dft:"false"`
+	BackupIPset    bool `cli:"s,ipset" usage:"Update ipset" dft:"true"`
 }
 
 var backupCMD = &cli.Command{
 	Name:    "backup",
 	Aliases: []string{"b", "bak", "backup"},
-	Desc:    "backups ipset and iptables",
+	Desc:    "backups ipset(-s) and (iptables with -t)",
 	Argv:    func() interface{} { return new(backupT) },
 	Fn: func(ctx *cli.Context) error {
+		argv := ctx.Argv().(*backupT)
 		_, configFile := createAndValidateConfigFile()
-		backupIPs(configFile)
+		backupIPs(configFile, argv.BackupIPset, argv.BackupIPtables)
 		return nil
 	},
 }
 
-func backupIPs(configFile string) {
+func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 	configFolder, _ := path.Split(configFile)
 	iptablesFile := configFolder + "iptables.bak"
 	ipsetFile := configFolder + "ipset.bak"
 
-	_, err := os.Stat(iptablesFile)
-	if err != nil {
-		_, err = os.Create(iptablesFile)
+	if updateIPtables {
+		_, err := os.Stat(iptablesFile)
 		if err != nil {
-			fmt.Println("Can't create backup file: " + iptablesFile)
-			return
+			_, err = os.Create(iptablesFile)
+			if err != nil {
+				fmt.Println("Can't create backup file: " + iptablesFile)
+			}
+		}
+
+		_, err = runCommand(nil, "iptables-save > "+iptablesFile)
+		if err != nil {
+			fmt.Println("Couldn'd backup iptables:", err.Error())
+		} else {
+			fmt.Println("Iptables backup successfull")
 		}
 	}
-	_, err = os.Stat(ipsetFile)
-	if err != nil {
-		_, err = os.Create(ipsetFile)
+
+	if updateIPset {
+		_, err := os.Stat(ipsetFile)
 		if err != nil {
-			fmt.Println("Can't create backup file: " + ipsetFile)
-			return
+			_, err = os.Create(ipsetFile)
+			if err != nil {
+				fmt.Println("Can't create backup file: " + ipsetFile)
+				return
+			}
 		}
-	}
 
-	erro := false
-	_, err = runCommand(nil, "iptables-save > "+iptablesFile)
-	if err != nil {
-		fmt.Println("Couldn'd backup iptables:", err.Error())
-		erro = true
-	}
-
-	_, err = runCommand(nil, "ipset save blocklist > "+ipsetFile)
-	if err != nil {
-		fmt.Println("Couldn'd backup ipset:", err.Error())
-		erro = true
-	}
-
-	if erro {
-		fmt.Println("Error while backing up files")
-	} else {
-		fmt.Println("Successfully backed up iptables and ipset")
+		_, err = runCommand(nil, "ipset save blocklist > "+ipsetFile)
+		if err != nil {
+			fmt.Println("Couldn'd backup ipset:", err.Error())
+		} else {
+			fmt.Println("Ipset backup successfull")
+		}
 	}
 }

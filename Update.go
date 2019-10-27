@@ -109,7 +109,7 @@ func FetchIPs(c *Config, configFile string, fetchAll bool) error {
 	c.save(configFile)
 
 	blockIPs(fetchresponse.IPs)
-	backupIPs(configFile)
+	backupIPs(configFile, true, false)
 	return nil
 }
 
