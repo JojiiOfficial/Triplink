@@ -71,6 +71,7 @@ func fetchIPs(c *Config, configFile string, fetchAll bool) error {
 	since := c.LastUpdate
 	if fetchAll {
 		since = 0
+		//TODO delete all ipaddresses if full sync
 	}
 	requestData := FetchRequest{
 		Token: c.Token,
