@@ -17,7 +17,7 @@ var root = &cli.Command{
 	Desc: "this is root command",
 	Argv: func() interface{} { return new(argT) },
 	Fn: func(ctx *cli.Context) error {
-		fmt.Println("Usage: twreporter <report/(view/create/delete)config> [-f,-r,-t,-o,-u,-a]")
+		fmt.Println("Usage: twreporter <report/update/(view/create/delete)config/backup/restore> [-f,-r,-t,-o,-u,-a]")
 		return nil
 	},
 }
