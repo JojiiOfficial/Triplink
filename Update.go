@@ -27,6 +27,9 @@ var updateCMD = &cli.Command{
 			fmt.Println("You need to be root!")
 			return nil
 		}
+		if !checkCommands() {
+			return nil
+		}
 		logStatus, configFile := createAndValidateConfigFile()
 		var config *Config
 		if logStatus < 0 {
@@ -106,4 +109,14 @@ func fetchIPs(c *Config, configFile string, fetchAll bool) error {
 
 func blockIPs(ips []IPList) {
 	fmt.Println(ips)
+}
+
+func checkCommands() bool {
+	_, err := runCommand(nil, "ipset help")
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("You need to install 'ipset' to run this command!")
+		return false
+	}
+	return true
 }
