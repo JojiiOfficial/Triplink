@@ -109,7 +109,7 @@ var reportCMD = &cli.Command{
 			if err != nil {
 				fmt.Println("error making request: " + err.Error())
 			} else {
-				fmt.Println(resp)
+				fmt.Print(resp)
 			}
 
 			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
