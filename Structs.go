@@ -35,5 +35,6 @@ type FetchResponse struct {
 
 //IPList a list of ips from DB
 type IPList struct {
-	IP string `db:"ip" json:"ip"`
+	IP      string `json:"ip"`
+	Deleted int    `json:"del"`
 }
