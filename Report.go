@@ -98,6 +98,10 @@ var reportCMD = &cli.Command{
 
 		ipsToReport := []IPset{}
 		for ip, t := range ipTime {
+			valid, _ := isIPValid(ip)
+			if !valid {
+				continue
+			}
 			reason := IPrequestTimesToReason(t)
 			ipsToReport = append(ipsToReport, IPset{ip, reason})
 		}
