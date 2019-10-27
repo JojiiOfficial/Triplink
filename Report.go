@@ -122,11 +122,11 @@ var reportCMD = &cli.Command{
 				fmt.Print(resp)
 			}
 
-			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
-			runCommand(nil, "echo -n > "+config.LogFile)
 		} else {
 			fmt.Println("Nothing to do (reporting)")
 		}
+		runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
+		runCommand(nil, "echo -n > "+config.LogFile)
 
 		if argv.DoUpdate {
 			FetchIPs(config, configFile, argv.UpdateEverything)
