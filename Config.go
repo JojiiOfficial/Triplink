@@ -9,9 +9,10 @@ import (
 
 //Config the global config struct
 type Config struct {
-	Host    string `json:"host"`
-	LogFile string `json:"logfile"`
-	Token   string `json:"token"`
+	Host       string `json:"host"`
+	LogFile    string `json:"logfile"`
+	Token      string `json:"token"`
+	LastUpdate int64  `json:"lastUpdate"`
 }
 
 func getConfPath(homeDir string) string {
@@ -35,7 +36,7 @@ func readConfig(file string) *Config {
 	return &res
 }
 
-func saveConfig(configFile string, config *Config) error {
+func (config *Config) save(configFile string) error {
 	sConf, err := json.Marshal(config)
 	if err != nil {
 		return err

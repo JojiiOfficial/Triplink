@@ -43,11 +43,11 @@ var createConfCMD = &cli.Command{
 }
 
 func createConf(configFile string, argv *newConfT, update bool) {
-	err := saveConfig(configFile, &Config{
+	err := (&Config{
 		Host:    argv.Host,
 		LogFile: argv.LogFile,
 		Token:   argv.Token,
-	})
+	}).save(configFile)
 	if err == nil {
 		if update {
 			fmt.Println("Config updated successfully!")

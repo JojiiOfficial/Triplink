@@ -20,8 +20,8 @@ type FetchResponse struct {
 
 //IPList a list of ips from DB
 type IPList struct {
-	IP      string `db:"ip" json:"ip"`
-	Deleted int    `db:"deleted" json:"del"`
+	IP      string `json:"ip"`
+	Deleted int    `json:"del"`
 }
 
 //FetchRequest request strct for fetching changed ips
