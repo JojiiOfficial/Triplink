@@ -63,7 +63,7 @@ var updateCMD = &cli.Command{
 			}
 		}
 
-		err := fetchIPs(config, configFile, argv.FetchAll)
+		err := FetchIPs(config, configFile, argv.FetchAll)
 		if err != nil {
 			fmt.Println("Error fetching Update: " + err.Error())
 		}
@@ -72,7 +72,8 @@ var updateCMD = &cli.Command{
 	},
 }
 
-func fetchIPs(c *Config, configFile string, fetchAll bool) error {
+//FetchIPs fetches IPs and puts them into a blocklist
+func FetchIPs(c *Config, configFile string, fetchAll bool) error {
 	since := c.LastUpdate
 	if fetchAll {
 		since = 0
@@ -93,7 +94,7 @@ func fetchIPs(c *Config, configFile string, fetchAll bool) error {
 	data = strings.ReplaceAll(data, "\n", "")
 	if err != nil || data == "\"[]\"" {
 		if data == "\"[]\"" {
-			fmt.Println("Nothing to do")
+			fmt.Println("Nothing to do: updating")
 		}
 		return err
 	}

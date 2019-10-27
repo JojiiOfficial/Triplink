@@ -12,9 +12,11 @@ import (
 
 type reportT struct {
 	cli.Helper
-	LogFile string `cli:"f,file" usage:"Specify the file to read the logs from"`
-	Host    string `cli:"r,host" usage:"Specify the host to send the data to"`
-	Token   string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	LogFile          string `cli:"f,file" usage:"Specify the file to read the logs from"`
+	Host             string `cli:"r,host" usage:"Specify the host to send the data to"`
+	Token            string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	DoUpdate         bool   `cli:"u,update" usage:"Specify if the client should update after the report" dft:"false"`
+	UpdateEverything bool   `cli:"a,all" usage:"Specify if the client should update everything if update is set" dft:"false"`
 }
 
 var reportCMD = &cli.Command{
@@ -75,6 +77,10 @@ var reportCMD = &cli.Command{
 			return nil
 		}
 
+		if argv.UpdateEverything && !argv.DoUpdate {
+			fmt.Println("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
+		}
+
 		fmt.Println("using log: ", config.LogFile)
 		ipTime := make(map[string]([]time.Time))
 		err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
@@ -115,7 +121,11 @@ var reportCMD = &cli.Command{
 			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
 			runCommand(nil, "echo -n > "+config.LogFile)
 		} else {
-			fmt.Println("Nothing to do")
+			fmt.Println("Nothing to do: reporting")
+		}
+
+		if argv.DoUpdate {
+			FetchIPs(config, configFile, argv.UpdateEverything)
 		}
 
 		return nil
