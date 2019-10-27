@@ -23,3 +23,18 @@ type IPList struct {
 	IP      string `db:"ip" json:"ip"`
 	Deleted int    `db:"deleted" json:"del"`
 }
+
+//FetchRequest request strct for fetching changed ips
+type FetchRequest struct {
+	Token  string      `json:"token"`
+	Filter FetchFilter `json:"filter"`
+}
+
+//FetchFilter to filter result from fetch request
+type FetchFilter struct {
+	Since        int64   `json:"since"`
+	MinReason    float64 `json:"minReason"`
+	MinReports   int     `json:"minReports"`
+	ProxyAllowed int     `json:"allowProxy"`
+	MaxIPs       uint    `json:"maxIPs"`
+}
