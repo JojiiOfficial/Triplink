@@ -121,7 +121,7 @@ var reportCMD = &cli.Command{
 			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
 			runCommand(nil, "echo -n > "+config.LogFile)
 		} else {
-			fmt.Println("Nothing to do: reporting")
+			fmt.Println("Nothing to do (reporting)")
 		}
 
 		if argv.DoUpdate {

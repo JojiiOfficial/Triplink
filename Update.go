@@ -94,7 +94,7 @@ func FetchIPs(c *Config, configFile string, fetchAll bool) error {
 	data = strings.ReplaceAll(data, "\n", "")
 	if err != nil || data == "\"[]\"" {
 		if data == "\"[]\"" {
-			fmt.Println("Nothing to do: updating")
+			fmt.Println("Nothing to do (updating)")
 		}
 		return err
 	}
@@ -109,7 +109,7 @@ func FetchIPs(c *Config, configFile string, fetchAll bool) error {
 	c.save(configFile)
 
 	blockIPs(fetchresponse.IPs)
-
+	backupIPs(configFile)
 	return nil
 }
 
