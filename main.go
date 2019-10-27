@@ -29,6 +29,7 @@ func main() {
 		cli.Tree(createConfCMD),
 		cli.Tree(deleteConfCMD),
 		cli.Tree(viewConfCMD),
+		cli.Tree(updateCMD),
 	).Run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
