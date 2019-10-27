@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/mkideal/cli"
@@ -30,6 +31,9 @@ var updateCMD = &cli.Command{
 		if !checkCommands() {
 			return nil
 		}
+
+		setupIPset()
+
 		logStatus, configFile := createAndValidateConfigFile()
 		var config *Config
 		if logStatus < 0 {
@@ -62,8 +66,6 @@ var updateCMD = &cli.Command{
 		err := fetchIPs(config, configFile, argv.FetchAll)
 		if err != nil {
 			fmt.Println("Error fetching Update: " + err.Error())
-		} else {
-			fmt.Println("Update successfull")
 		}
 
 		return nil
@@ -74,7 +76,7 @@ func fetchIPs(c *Config, configFile string, fetchAll bool) error {
 	since := c.LastUpdate
 	if fetchAll {
 		since = 0
-		//todo delete all ips on full sync
+		flusIPset()
 	}
 	requestData := FetchRequest{
 		Token: c.Token,
@@ -90,6 +92,9 @@ func fetchIPs(c *Config, configFile string, fetchAll bool) error {
 	data, err := request(c.Host+"/fetch", js)
 	data = strings.ReplaceAll(data, "\n", "")
 	if err != nil || data == "\"[]\"" {
+		if data == "\"[]\"" {
+			fmt.Println("Nothing to do")
+		}
 		return err
 	}
 
@@ -108,15 +113,87 @@ func fetchIPs(c *Config, configFile string, fetchAll bool) error {
 }
 
 func blockIPs(ips []IPList) {
-	fmt.Println(ips)
+	addCount := 0
+	remCount := 0
+	for _, ip := range ips {
+		if ip.Deleted == 1 {
+			if ipsetRemoveIP(ip.IP) {
+				remCount++
+			}
+		} else {
+			if ipsetAddIP(ip.IP) {
+				addCount++
+			}
+		}
+	}
+	if activateIPset() {
+		fmt.Println("Successfully added "+strconv.Itoa(addCount), "and removed "+strconv.Itoa(remCount), "IPs")
+	}
+}
+
+func activateIPset() bool {
+	if iptableHasRule() {
+		return true
+	}
+	_, err := runCommand(nil, "iptables -A INPUT -m set --match-set blocklist src -j DROP")
+	if err != nil {
+		fmt.Println("Couldn't activate iptable set. Blocking might be unavailable")
+		return false
+	}
+	return true
+}
+
+func flusIPset() {
+	runCommand(nil, "ipset flush blocklist")
+}
+
+func iptableHasRule() bool {
+	_, err := runCommand(nil, "iptables -C INPUT -m set --match-set blocklist src -j DROP")
+	return err == nil
+}
+
+func ipsetAddIP(ip string) bool {
+	valid, _ := isIPValid(ip)
+	if valid {
+		_, err := runCommand(nil, "ipset add blocklist "+ip)
+		return err == nil
+	}
+	return false
+}
+
+func ipsetRemoveIP(ip string) bool {
+	valid, _ := isIPValid(ip)
+	if valid {
+		_, err := runCommand(nil, "ipset del blocklist "+ip)
+		return err == nil
+	}
+	return false
 }
 
 func checkCommands() bool {
 	_, err := runCommand(nil, "ipset help")
 	if err != nil {
-		fmt.Println(err)
 		fmt.Println("You need to install 'ipset' to run this command!")
 		return false
 	}
 	return true
+}
+
+func hasBlocklist() bool {
+	_, err := runCommand(nil, "ipset list blocklist")
+	return err == nil
+}
+
+func createBlocklist() bool {
+	_, err := runCommand(nil, "ipset create blocklist nethash")
+	return err == nil
+}
+
+func setupIPset() {
+	if !hasBlocklist() {
+		if !createBlocklist() {
+			fmt.Println("Couldn't create blocklist! Exiting")
+			os.Exit(1)
+		}
+	}
 }
