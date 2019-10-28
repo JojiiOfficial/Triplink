@@ -76,9 +76,6 @@ var reportCMD = &cli.Command{
 			}
 		}
 
-		fmt.Println(config)
-
-		return nil
 		logFileExists := validateLogFile(config.LogFile)
 		if !logFileExists {
 			fmt.Println("Logfile doesn't exists")
