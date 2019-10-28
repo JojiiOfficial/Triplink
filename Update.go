@@ -12,9 +12,10 @@ import (
 
 type updateConfT struct {
 	cli.Helper
-	Host     string `cli:"r,host" usage:"Specify the host to send the data to"`
-	Token    string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
-	FetchAll bool   `cli:"a,all" usage:"Fetches everything"`
+	Host       string `cli:"r,host" usage:"Specify the host to send the data to"`
+	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	FetchAll   bool   `cli:"a,all" usage:"Fetches everything"`
+	IgnoreCert bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
 }
 
 var updateCMD = &cli.Command{
@@ -66,7 +67,7 @@ var updateCMD = &cli.Command{
 			}
 		}
 
-		err := FetchIPs(config, configFile, argv.FetchAll)
+		err := FetchIPs(config, configFile, argv.FetchAll, argv.IgnoreCert)
 		if err != nil {
 			fmt.Println("Error fetching Update: " + err.Error())
 		}
@@ -76,7 +77,7 @@ var updateCMD = &cli.Command{
 }
 
 //FetchIPs fetches IPs and puts them into a blocklist
-func FetchIPs(c *Config, configFile string, fetchAll bool) error {
+func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
 	since := c.LastUpdate
 	if fetchAll {
 		since = 0
@@ -93,7 +94,7 @@ func FetchIPs(c *Config, configFile string, fetchAll bool) error {
 		return err
 	}
 
-	data, err := request(c.Host+"/fetch", js)
+	data, err := request(c.Host+"/fetch", js, ignoreCert)
 	data = strings.ReplaceAll(data, "\n", "")
 	if err != nil || data == "\"[]\"" {
 		if data == "\"[]\"" {

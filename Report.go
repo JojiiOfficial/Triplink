@@ -20,6 +20,7 @@ type reportT struct {
 	DoUpdate         bool   `cli:"u,update" usage:"Specify if the client should update after the report" dft:"false"`
 	UpdateEverything bool   `cli:"a,all" usage:"Specify if the client should update everything if update is set" dft:"false"`
 	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset"`
+	IgnoreCert       bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
 }
 
 var reportCMD = &cli.Command{
@@ -147,7 +148,7 @@ var reportCMD = &cli.Command{
 				panic(err)
 			}
 
-			resp, err := request(config.Host+"/report", js)
+			resp, err := request(config.Host+"/report", js, argv.IgnoreCert)
 			if err != nil {
 				fmt.Println("error making request: " + err.Error())
 			} else {
@@ -161,7 +162,7 @@ var reportCMD = &cli.Command{
 		runCommand(nil, "echo -n > "+config.LogFile)
 
 		if argv.DoUpdate {
-			FetchIPs(config, configFile, argv.UpdateEverything)
+			FetchIPs(config, configFile, argv.UpdateEverything, argv.IgnoreCert)
 		}
 
 		return nil
