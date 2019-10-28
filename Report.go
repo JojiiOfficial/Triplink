@@ -51,26 +51,34 @@ var reportCMD = &cli.Command{
 				Token:   argv.Token,
 			}
 		} else {
-			if len(argv.Host) != 0 && len(argv.LogFile) != 0 && len(argv.Token) != 0 {
-				logFileExists := validateLogFile(argv.LogFile)
-				if !logFileExists {
-					fmt.Println("Logfile doesn't exists")
-					return nil
-				}
-				fmt.Println("Using arguments instead of config!")
-				config = &Config{
-					Host:    argv.Host,
-					LogFile: argv.LogFile,
-					Token:   argv.Token,
-				}
-			} else if len(argv.Host) != 0 || len(argv.LogFile) != 0 || len(argv.Token) != 0 {
-				fmt.Println("Arguments missing. Using config!")
-				config = readConfig(configFile)
-			} else {
-				config = readConfig(configFile)
+			fileConfig := readConfig(configFile)
+			logFile := fileConfig.LogFile
+			host := fileConfig.Host
+			token := fileConfig.Token
+			if len(argv.LogFile) > 0 {
+				logFile = argv.LogFile
+			}
+			logFileExists := validateLogFile(logFile)
+			if !logFileExists {
+				fmt.Println("Logfile doesn't exists")
+				return nil
+			}
+			if len(argv.Host) > 0 {
+				host = argv.Host
+			}
+			if len(argv.Token) > 0 {
+				token = argv.Token
+			}
+			config = &Config{
+				Host:    host,
+				LogFile: logFile,
+				Token:   token,
 			}
 		}
 
+		fmt.Println(config)
+
+		return nil
 		logFileExists := validateLogFile(config.LogFile)
 		if !logFileExists {
 			fmt.Println("Logfile doesn't exists")
