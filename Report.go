@@ -148,7 +148,7 @@ var reportCMD = &cli.Command{
 				panic(err)
 			}
 
-			resp, err := request(config.Host+"/report", js, argv.IgnoreCert)
+			resp, err := request(config.Host, "report", js, argv.IgnoreCert)
 			if err != nil {
 				fmt.Println("error making request: " + err.Error())
 			} else {

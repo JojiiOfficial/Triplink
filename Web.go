@@ -5,14 +5,21 @@ import (
 	"crypto/tls"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
-func request(url string, data []byte, ignoreCert bool) (string, error) {
+func request(url, file string, data []byte, ignoreCert bool) (string, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: ignoreCert},
 	}
 	client := &http.Client{Transport: tr}
-	resp, err := client.Post(url, "application/json", bytes.NewBuffer([]byte(data)))
+	addFile := ""
+	if strings.HasSuffix(url, "/") {
+		addFile = url + file
+	} else {
+		addFile = url + "/" + file
+	}
+	resp, err := client.Post(addFile, "application/json", bytes.NewBuffer([]byte(data)))
 	if err != nil {
 		return "", err
 	}
