@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	iptablesparser "github.com/JojiiOfficial/Iptables-log-parser"
@@ -17,6 +19,7 @@ type reportT struct {
 	Token            string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
 	DoUpdate         bool   `cli:"u,update" usage:"Specify if the client should update after the report" dft:"false"`
 	UpdateEverything bool   `cli:"a,all" usage:"Specify if the client should update everything if update is set" dft:"false"`
+	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset"`
 }
 
 var reportCMD = &cli.Command{
@@ -86,29 +89,53 @@ var reportCMD = &cli.Command{
 			fmt.Println("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
 		}
 
-		fmt.Println("using log: ", config.LogFile)
-		ipTime := make(map[string]([]time.Time))
-		err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
-			_, has := ipTime[log.Src]
-			if has {
-				ipTime[log.Src] = append(ipTime[log.Src], log.Time)
-			} else {
-				ipTime[log.Src] = append([]time.Time{}, log.Time)
-			}
-		})
-
-		if err != nil {
-			fmt.Println("Can't read File: ", err.Error())
-		}
-
 		ipsToReport := []IPset{}
-		for ip, t := range ipTime {
-			valid, _ := isIPValid(ip)
-			if !valid {
-				continue
+		if len(argv.CustomIPs) > 0 {
+			fmt.Println("using arguments")
+			ips := strings.Split(argv.CustomIPs, ";")
+			for _, ip := range ips {
+				iptrp := ""
+				reason := 1
+				if strings.Contains(ip, ",") {
+					dat := strings.Split(ip, ",")
+					iReason, err := strconv.Atoi(dat[1])
+					if err == nil {
+						reason = iReason
+					}
+					iptrp = dat[0]
+				} else {
+					iptrp = ip
+				}
+				valid, nvReason := isIPValid(iptrp)
+				if valid {
+					ipsToReport = append(ipsToReport, IPset{IP: iptrp, Reason: reason})
+				} else {
+					fmt.Println("Ip is not valid:", iptrp, ipErrToString(nvReason), "skipping")
+				}
 			}
-			reason := IPrequestTimesToReason(t)
-			ipsToReport = append(ipsToReport, IPset{ip, reason})
+		} else {
+			fmt.Println("using log: ", config.LogFile)
+			ipTime := make(map[string]([]time.Time))
+			err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
+				_, has := ipTime[log.Src]
+				if has {
+					ipTime[log.Src] = append(ipTime[log.Src], log.Time)
+				} else {
+					ipTime[log.Src] = append([]time.Time{}, log.Time)
+				}
+			})
+
+			if err != nil {
+				fmt.Println("Can't read File: ", err.Error())
+			}
+			for ip, t := range ipTime {
+				valid, _ := isIPValid(ip)
+				if !valid {
+					continue
+				}
+				reason := IPrequestTimesToReason(t)
+				ipsToReport = append(ipsToReport, IPset{ip, reason})
+			}
 		}
 
 		if len(ipsToReport) > 0 {

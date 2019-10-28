@@ -39,6 +39,24 @@ func isIPValid(ip string) (bool, int) {
 	return true, 1
 }
 
+func ipErrToString(err int) string {
+	switch err {
+	case 1:
+		{
+			return "Succes"
+		}
+	case -1:
+		{
+			return "Reserved"
+		}
+	case 0:
+		{
+			return "No ipv4"
+		}
+	}
+	return ""
+}
+
 func appendLogs(newf, logs string) {
 	file, err := os.OpenFile(newf, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 755)
 	if err != nil {
