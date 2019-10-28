@@ -49,17 +49,20 @@ var updateCMD = &cli.Command{
 				Token: argv.Token,
 			}
 		} else {
-			if len(argv.Host) != 0 && len(argv.Token) != 0 {
-				fmt.Println("Using arguments instead of config!")
-				config = &Config{
-					Host:  argv.Host,
-					Token: argv.Token,
-				}
-			} else if len(argv.Host) != 0 || len(argv.Token) != 0 {
-				fmt.Println("Arguments missing. Using config!")
-				config = readConfig(configFile)
-			} else {
-				config = readConfig(configFile)
+			fileConfig := readConfig(configFile)
+			logFile := fileConfig.LogFile
+			host := fileConfig.Host
+			token := fileConfig.Token
+			if len(argv.Host) > 0 {
+				host = argv.Host
+			}
+			if len(argv.Token) > 0 {
+				token = argv.Token
+			}
+			config = &Config{
+				Host:    host,
+				LogFile: logFile,
+				Token:   token,
 			}
 		}
 
