@@ -18,7 +18,7 @@ var restoreCMD = &cli.Command{
 	Desc:    "restore ipset and iptables",
 	Argv:    func() interface{} { return new(restoreT) },
 	Fn: func(ctx *cli.Context) error {
-		_, configFile := createAndValidateConfigFile()
+		_, configFile := createAndValidateConfigFile("")
 		restoreIPs(configFile)
 		return nil
 	},

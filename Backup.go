@@ -21,7 +21,7 @@ var backupCMD = &cli.Command{
 	Argv:    func() interface{} { return new(backupT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*backupT)
-		_, configFile := createAndValidateConfigFile()
+		_, configFile := createAndValidateConfigFile("")
 		backupIPs(configFile, argv.BackupIPset, argv.BackupIPtables)
 		return nil
 	},

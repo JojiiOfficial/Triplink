@@ -9,6 +9,7 @@ import (
 
 type deleteConfT struct {
 	cli.Helper
+	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
 }
 
 var deleteConfCMD = &cli.Command{
@@ -17,16 +18,17 @@ var deleteConfCMD = &cli.Command{
 	Desc:    "Delete configuration file",
 	Argv:    func() interface{} { return new(deleteConfT) },
 	Fn: func(ctx *cli.Context) error {
+		argv := ctx.Argv().(*deleteConfT)
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			fmt.Println("Couldn't retrieve homeDir!")
 			return nil
 		}
 		confPath := getConfPath(homeDir)
-		confFile := getConfFile(confPath)
+		confFile := getConfFile(confPath, argv.ConfigName)
 		_, err = os.Stat(confFile)
 		if err == nil {
-			err := os.RemoveAll(confPath)
+			err := os.RemoveAll(confFile)
 			if err != nil {
 				fmt.Println("Couldn't delete configfile!")
 				return nil

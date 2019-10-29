@@ -14,6 +14,7 @@ type updateConfT struct {
 	cli.Helper
 	Host       string `cli:"r,host" usage:"Specify the host to send the data to"`
 	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
 	FetchAll   bool   `cli:"a,all" usage:"Fetches everything"`
 	IgnoreCert bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
 }
@@ -35,14 +36,14 @@ var updateCMD = &cli.Command{
 
 		setupIPset()
 
-		logStatus, configFile := createAndValidateConfigFile()
+		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		var config *Config
 		if logStatus < 0 {
 			return nil
 		} else if logStatus == 0 {
 			fmt.Println("Config empty. Using parameter as config. You can change them with <config>. Try 'twreporter help config' for more information.")
 			if len(argv.Host) == 0 || len(argv.Token) == 0 {
-				fmt.Println("There is no config file! You have to set all arguments. Try 'twreporter help report'")
+				fmt.Println("There is no such config file! You have to set all arguments. Try 'twreporter help report'")
 				return nil
 			}
 			config = &Config{

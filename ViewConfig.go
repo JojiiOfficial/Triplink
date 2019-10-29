@@ -9,6 +9,7 @@ import (
 
 type viewConfT struct {
 	cli.Helper
+	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
 }
 
 var viewConfCMD = &cli.Command{
@@ -17,13 +18,15 @@ var viewConfCMD = &cli.Command{
 	Desc:    "View configuration file",
 	Argv:    func() interface{} { return new(viewConfT) },
 	Fn: func(ctx *cli.Context) error {
+		argv := ctx.Argv().(*viewConfT)
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			fmt.Println("Couldn't retrieve homeDir!")
 			return nil
 		}
 
-		confFile := getConfFile(getConfPath(homeDir))
+		confFile := getConfFile(getConfPath(homeDir), argv.ConfigName)
+		fmt.Println(confFile)
 		_, err = os.Stat(confFile)
 		if err != nil {
 			fmt.Println("No config found. Nothing to do.")

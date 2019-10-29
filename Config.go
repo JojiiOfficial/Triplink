@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 //Config the global config struct
@@ -19,8 +20,11 @@ func getConfPath(homeDir string) string {
 	return homeDir + "/" + ".tripwirereporter/"
 }
 
-func getConfFile(confPath string) string {
-	return confPath + "conf.json"
+func getConfFile(confPath, confName string) string {
+	if !strings.HasSuffix(confName, ".json") {
+		confName += ".json"
+	}
+	return confPath + confName
 }
 
 func readConfig(file string) *Config {
@@ -56,14 +60,17 @@ func validateLogFile(logfile string) bool {
 	return true
 }
 
-func createAndValidateConfigFile() (int, string) {
+func createAndValidateConfigFile(confName string) (int, string) {
+	if !strings.HasSuffix(confName, ".json") {
+		confName += ".json"
+	}
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Println("Couldn't retrieve homeDir!")
 		return -1, ""
 	}
 	confPath := getConfPath(homeDir)
-	confFile := getConfFile(confPath)
+	confFile := getConfFile(confPath, confName)
 	_, err = os.Stat(confPath)
 	if err != nil {
 		err = os.MkdirAll(confPath, os.ModePerm)
