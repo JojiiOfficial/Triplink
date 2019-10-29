@@ -15,6 +15,7 @@ sudo mv ./twreporter /usr/bin/twreporter
 # Usage
 
 Create a config file to store the data. Every report/update will go to the given server.<br>
+<b>Note:</b> Don't use the same config file for multiple reporter instances
 ```
 # twreporter createConfig -f /var/log/Tripwire21 -t <token> -r <https://a-serv.er>
 ```
