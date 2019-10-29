@@ -91,8 +91,8 @@ var reportCMD = &cli.Command{
 		}
 
 		ipsToReport := []IPset{}
-		useLog := len(argv.CustomIPs) > 0
-		if useLog {
+		useLog := len(argv.CustomIPs) == 0
+		if !useLog {
 			fmt.Println("using arguments")
 			ips := strings.Split(argv.CustomIPs, ";")
 			for _, ip := range ips {
