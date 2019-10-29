@@ -12,6 +12,7 @@ type newConfT struct {
 	Host       string `cli:"*r,host" usage:"Specify the host to send the data to"`
 	Token      string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
 	Overwrite  bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
+	SetFilter  bool   `cli:"F,filter" usage:"Specify to set the filter after creating the config" dft:"false"`
 	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
 }
 
@@ -29,7 +30,6 @@ var createConfCMD = &cli.Command{
 			return nil
 		}
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
-		fmt.Println(configFile)
 		if logStatus == 0 {
 			createConf(configFile, argv, false)
 		} else if logStatus == 1 {
@@ -53,9 +53,12 @@ func createConf(configFile string, argv *newConfT, update bool) {
 	if err == nil {
 		if update {
 			fmt.Println("Config updated successfully!")
-			fmt.Println(configFile)
 		} else {
 			fmt.Println("Config created successfully!")
+		}
+		fmt.Println(configFile)
+		if argv.SetFilter {
+			createFilter(configFile)
 		}
 	} else {
 		fmt.Println("Error saving config File: " + err.Error())

@@ -52,22 +52,16 @@ var updateCMD = &cli.Command{
 			}
 		} else {
 			fileConfig := readConfig(configFile)
-			logFile := fileConfig.LogFile
-			host := fileConfig.Host
-			token := fileConfig.Token
 			if len(argv.Host) > 0 {
-				host = argv.Host
+				fileConfig.Host = argv.Host
 			}
 			if len(argv.Token) > 0 {
-				token = argv.Token
+				fileConfig.Token = argv.Token
 			}
-			config = &Config{
-				Host:    host,
-				LogFile: logFile,
-				Token:   token,
-			}
+			config = fileConfig
 		}
 
+		fmt.Println(config)
 		err := FetchIPs(config, configFile, argv.FetchAll, argv.IgnoreCert)
 		if err != nil {
 			fmt.Println("Error fetching Update: " + err.Error())

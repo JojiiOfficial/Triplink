@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -19,7 +20,8 @@ func request(url, file string, data []byte, ignoreCert bool) (string, error) {
 	} else {
 		addFile = url + "/" + file
 	}
-	resp, err := client.Post(addFile, "application/json", bytes.NewBuffer([]byte(data)))
+	fmt.Println(string(data))
+	resp, err := client.Post(addFile, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return "", err
 	}
