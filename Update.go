@@ -79,16 +79,13 @@ var updateCMD = &cli.Command{
 
 //FetchIPs fetches IPs and puts them into a blocklist
 func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
-	since := c.LastUpdate
 	if fetchAll {
-		since = 0
+		c.Filter.Since = 0
 		flusIPset()
 	}
 	requestData := FetchRequest{
-		Token: c.Token,
-		Filter: FetchFilter{
-			Since: since,
-		},
+		Token:  c.Token,
+		Filter: c.Filter,
 	}
 	js, err := json.Marshal(requestData)
 	if err != nil {
