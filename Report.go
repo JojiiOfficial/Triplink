@@ -91,7 +91,8 @@ var reportCMD = &cli.Command{
 		}
 
 		ipsToReport := []IPset{}
-		if len(argv.CustomIPs) > 0 {
+		useLog := len(argv.CustomIPs) > 0
+		if useLog {
 			fmt.Println("using arguments")
 			ips := strings.Split(argv.CustomIPs, ";")
 			for _, ip := range ips {
@@ -158,8 +159,11 @@ var reportCMD = &cli.Command{
 		} else {
 			fmt.Println("Nothing to do (reporting)")
 		}
-		runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
-		runCommand(nil, "echo -n > "+config.LogFile)
+
+		if useLog {
+			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
+			runCommand(nil, "echo -n > "+config.LogFile)
+		}
 
 		if argv.DoUpdate {
 			FetchIPs(config, configFile, argv.UpdateEverything, argv.IgnoreCert)
