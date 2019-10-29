@@ -14,7 +14,7 @@ type viewConfT struct {
 
 var viewConfCMD = &cli.Command{
 	Name:    "viewConfig",
-	Aliases: []string{"vconf", "viewc", "showconf", "showconfig", "config", "conf", "confshow", "confview"},
+	Aliases: []string{"vconf", "vc", "viewc", "showconf", "showconfig", "config", "conf", "confshow", "confview"},
 	Desc:    "View configuration file",
 	Argv:    func() interface{} { return new(viewConfT) },
 	Fn: func(ctx *cli.Context) error {
