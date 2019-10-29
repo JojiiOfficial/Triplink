@@ -39,6 +39,12 @@ var viewConfCMD = &cli.Command{
 		fmt.Println("Host:\t\t", conf.Host)
 		fmt.Println("LogFile:\t", conf.LogFile)
 		fmt.Println("Token:\t\t", conf.Token)
+		fmt.Println("Filter: ")
+		filter := conf.Filter
+		fmt.Println("  min-Reason: \t", filter.MinReason, "1 = scanner, 2 spammer, 3 = bruteforcer")
+		fmt.Println("  Proxies allow:", filter.ProxyAllowed, "(-1 = false, 0 = true)")
+		fmt.Println("  min-Reports: \t", filter.MinReports)
+		fmt.Println("  maxIPs: \t", filter.MaxIPs)
 
 		return nil
 	},
