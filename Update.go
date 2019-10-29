@@ -61,7 +61,6 @@ var updateCMD = &cli.Command{
 			config = fileConfig
 		}
 
-		fmt.Println(config)
 		err := FetchIPs(config, configFile, argv.FetchAll, argv.IgnoreCert)
 		if err != nil {
 			fmt.Println("Error fetching Update: " + err.Error())
