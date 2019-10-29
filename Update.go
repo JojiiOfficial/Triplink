@@ -100,7 +100,7 @@ func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
 		return err
 	}
 
-	c.LastUpdate = fetchresponse.CurrentTimestamp
+	c.Filter.Since = fetchresponse.CurrentTimestamp
 	c.save(configFile)
 
 	blockIPs(fetchresponse.IPs)
