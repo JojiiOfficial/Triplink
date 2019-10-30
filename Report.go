@@ -87,8 +87,6 @@ var reportCMD = &cli.Command{
 			return nil
 		}
 
-		fmt.Println(*config)
-
 		if argv.UpdateEverything && !argv.DoUpdate {
 			fmt.Println("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
 		}
