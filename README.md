@@ -1,5 +1,5 @@
 # Tripwire-reporter
-This is a client which parses the logs from [Tripwire](https://github.com/JojiiOfficial/Tripwire) and uploads the ips to a server. The logs form [Tripwire](https://github.com/JojiiOfficial/Tripwire) are in most cases webscanner who scan you or your server to make analytics or want to hack you. If you use this package, you can store scanner in a database automatically and block specific ip adderesses. This allowes you to sync those evil ips between multiple devices/server. In addition you can easily create/restore iptable and ipset backups.
+This is a client which parses the logs from [Tripwire](https://github.com/JojiiOfficial/Tripwire) and uploads the IPs to a server. The logs from [Tripwire](https://github.com/JojiiOfficial/Tripwire) are in most cases webscanner who scan your machine(s) to make analytics or want to hack you. If you use this package, you can store scanner automatically in a database and block specific IP adderesses. This allowes you to sync those evil IPs between multiple devices/servers. In addition you can easily create/restore iptable and ipset backups.
 
 # Install
 Run
