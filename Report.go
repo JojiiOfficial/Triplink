@@ -111,6 +111,15 @@ var reportCMD = &cli.Command{
 				}
 				ipsToCheck := []string{}
 				if strings.Contains(iptrp, "/") {
+					cidr, err := strconv.Atoi(strings.Split(iptrp, "/")[1])
+					if err != nil {
+						fmt.Println("CIDR is no int! Skipping", iptrp)
+						continue
+					}
+					if cidr < 24 {
+						fmt.Println("You really want to report more than 256 IPs? I don't think so")
+						continue
+					}
 					iplist, err := cidrToIPlist(iptrp)
 					if err != nil {
 						fmt.Println("Error parsing CIDR:", err.Error())
