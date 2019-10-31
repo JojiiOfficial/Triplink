@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	iptablesparser "github.com/JojiiOfficial/Iptables-log-parser"
@@ -12,9 +14,14 @@ import (
 
 type reportT struct {
 	cli.Helper
-	LogFile string `cli:"f,file" usage:"Specify the file to read the logs from"`
-	Host    string `cli:"r,host" usage:"Specify the host to send the data to"`
-	Token   string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	LogFile          string `cli:"f,file" usage:"Specify the file to read the logs from"`
+	Host             string `cli:"r,host" usage:"Specify the host to send the data to"`
+	Token            string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	DoUpdate         bool   `cli:"u,update" usage:"Specify if the client should update after the report" dft:"false"`
+	UpdateEverything bool   `cli:"a,all" usage:"Specify if the client should update everything if update is set" dft:"false"`
+	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset"`
+	IgnoreCert       bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
+	ConfigName       string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
 }
 
 var reportCMD = &cli.Command{
@@ -28,14 +35,14 @@ var reportCMD = &cli.Command{
 			fmt.Println("You need to be root!")
 			return nil
 		}
-		logStatus, configFile := createAndValidateConfigFile()
+		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		var config *Config
 		if logStatus < 0 {
 			return nil
 		} else if logStatus == 0 {
 			fmt.Println("Config empty. Using parameter as config. You can change them with <config>. Try 'twreporter help config' for more information.")
 			if len(argv.Host) == 0 || len(argv.LogFile) == 0 || len(argv.Token) == 0 {
-				fmt.Println("There is no config file! You have to set all arguments. Try 'twreporter help report'")
+				fmt.Println("There is no such config file! You have to set all arguments. Try 'twreporter help report'")
 				return nil
 			}
 			logFileExists := validateLogFile(argv.LogFile)
@@ -49,23 +56,28 @@ var reportCMD = &cli.Command{
 				Token:   argv.Token,
 			}
 		} else {
-			if len(argv.Host) != 0 && len(argv.LogFile) != 0 && len(argv.Token) != 0 {
-				logFileExists := validateLogFile(argv.LogFile)
-				if !logFileExists {
-					fmt.Println("Logfile doesn't exists")
-					return nil
-				}
-				fmt.Println("Using arguments instead of config!")
-				config = &Config{
-					Host:    argv.Host,
-					LogFile: argv.LogFile,
-					Token:   argv.Token,
-				}
-			} else if len(argv.Host) != 0 || len(argv.LogFile) != 0 || len(argv.Token) != 0 {
-				fmt.Println("Arguments missing. Using config!")
-				config = readConfig(configFile)
-			} else {
-				config = readConfig(configFile)
+			fileConfig := readConfig(configFile)
+			logFile := fileConfig.LogFile
+			host := fileConfig.Host
+			token := fileConfig.Token
+			if len(argv.LogFile) > 0 {
+				logFile = argv.LogFile
+			}
+			logFileExists := validateLogFile(logFile)
+			if !logFileExists {
+				fmt.Println("Logfile doesn't exists")
+				return nil
+			}
+			if len(argv.Host) > 0 {
+				host = argv.Host
+			}
+			if len(argv.Token) > 0 {
+				token = argv.Token
+			}
+			config = &Config{
+				Host:    host,
+				LogFile: logFile,
+				Token:   token,
 			}
 		}
 
@@ -75,25 +87,74 @@ var reportCMD = &cli.Command{
 			return nil
 		}
 
-		fmt.Println("using log: ", config.LogFile)
-		ipTime := make(map[string]([]time.Time))
-		err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
-			_, has := ipTime[log.Src]
-			if has {
-				ipTime[log.Src] = append(ipTime[log.Src], log.Time)
-			} else {
-				ipTime[log.Src] = append([]time.Time{}, log.Time)
-			}
-		})
-
-		if err != nil {
-			fmt.Println("Can't read File: ", err.Error())
+		if argv.UpdateEverything && !argv.DoUpdate {
+			fmt.Println("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
 		}
 
 		ipsToReport := []IPset{}
-		for ip, t := range ipTime {
-			reason := IPrequestTimesToReason(t)
-			ipsToReport = append(ipsToReport, IPset{ip, reason})
+		useLog := len(argv.CustomIPs) == 0
+		if !useLog {
+			fmt.Println("using arguments")
+			ips := strings.Split(argv.CustomIPs, ";")
+			for _, ip := range ips {
+				iptrp := ""
+				reason := 1
+				if strings.Contains(ip, ",") {
+					dat := strings.Split(ip, ",")
+					iReason, err := strconv.Atoi(dat[1])
+					if err == nil {
+						reason = iReason
+					}
+					iptrp = dat[0]
+				} else {
+					iptrp = ip
+				}
+				ipsToCheck := []string{}
+				if strings.Contains(iptrp, "/") {
+					iplist, err := cidrToIPlist(iptrp)
+					if err != nil {
+						fmt.Println("Error parsing CIDR:", err.Error())
+						fmt.Println("Skipping CIDR range!")
+						continue
+					}
+					for _, cip := range iplist {
+						ipsToCheck = append(ipsToCheck, cip)
+					}
+				} else {
+					ipsToCheck = append(ipsToCheck, iptrp)
+				}
+				for _, icp := range ipsToCheck {
+					valid, nvReason := isIPValid(icp)
+					if valid {
+						ipsToReport = append(ipsToReport, IPset{IP: icp, Reason: reason})
+					} else {
+						fmt.Println("Ip is not valid:", icp, ipErrToString(nvReason), "skipping")
+					}
+				}
+			}
+		} else {
+			fmt.Println("using log: ", config.LogFile)
+			ipTime := make(map[string]([]time.Time))
+			err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
+				_, has := ipTime[log.Src]
+				if has {
+					ipTime[log.Src] = append(ipTime[log.Src], log.Time)
+				} else {
+					ipTime[log.Src] = append([]time.Time{}, log.Time)
+				}
+			})
+
+			if err != nil {
+				fmt.Println("Can't read File: ", err.Error())
+			}
+			for ip, t := range ipTime {
+				valid, _ := isIPValid(ip)
+				if !valid {
+					continue
+				}
+				reason := IPrequestTimesToReason(t)
+				ipsToReport = append(ipsToReport, IPset{ip, reason})
+			}
 		}
 
 		if len(ipsToReport) > 0 {
@@ -105,17 +166,24 @@ var reportCMD = &cli.Command{
 				panic(err)
 			}
 
-			resp, err := request(config.Host+"/report", js)
+			resp, err := request(config.Host, "report", js, argv.IgnoreCert)
 			if err != nil {
 				fmt.Println("error making request: " + err.Error())
 			} else {
-				fmt.Println(resp)
+				fmt.Print(resp)
 			}
 
+		} else {
+			fmt.Println("Nothing to do (reporting)")
+		}
+
+		if useLog {
 			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
 			runCommand(nil, "echo -n > "+config.LogFile)
-		} else {
-			fmt.Println("Nothing to do")
+		}
+
+		if argv.DoUpdate {
+			FetchIPs(config, configFile, argv.UpdateEverything, argv.IgnoreCert)
 		}
 
 		return nil

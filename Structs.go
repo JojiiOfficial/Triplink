@@ -12,18 +12,6 @@ type ReportIPStruct struct {
 	Ips   []IPset `json:"ips"`
 }
 
-//FetchResponse struct for fetch response
-type FetchResponse struct {
-	IPs              []IPList `json:"ips"`
-	CurrentTimestamp int64    `json:"cts"`
-}
-
-//IPList a list of ips from DB
-type IPList struct {
-	IP      string `json:"ip"`
-	Deleted int    `json:"del"`
-}
-
 //FetchRequest request strct for fetching changed ips
 type FetchRequest struct {
 	Token  string      `json:"token"`
@@ -37,4 +25,16 @@ type FetchFilter struct {
 	MinReports   int     `json:"minReports"`
 	ProxyAllowed int     `json:"allowProxy"`
 	MaxIPs       uint    `json:"maxIPs"`
+}
+
+//FetchResponse struct for fetch response
+type FetchResponse struct {
+	IPs              []IPList `json:"ips"`
+	CurrentTimestamp int64    `json:"cts"`
+}
+
+//IPList a list of ips from DB
+type IPList struct {
+	IP      string `json:"ip"`
+	Deleted int    `json:"del"`
 }

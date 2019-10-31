@@ -8,10 +8,12 @@ import (
 
 type newConfT struct {
 	cli.Helper
-	LogFile   string `cli:"*f,file" usage:"Specify the file to read the logs from"`
-	Host      string `cli:"*r,host" usage:"Specify the host to send the data to"`
-	Token     string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
-	Overwrite bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
+	LogFile    string `cli:"*f,file" usage:"Specify the file to read the logs from"`
+	Host       string `cli:"*r,host" usage:"Specify the host to send the data to"`
+	Token      string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
+	Overwrite  bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
+	SetFilter  bool   `cli:"F,filter" usage:"Specify to set the filter after creating the config" dft:"false"`
+	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
 }
 
 var createConfCMD = &cli.Command{
@@ -27,7 +29,7 @@ var createConfCMD = &cli.Command{
 			fmt.Println("Logfile doesn't exists")
 			return nil
 		}
-		logStatus, configFile := createAndValidateConfigFile()
+		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		if logStatus == 0 {
 			createConf(configFile, argv, false)
 		} else if logStatus == 1 {
@@ -53,6 +55,10 @@ func createConf(configFile string, argv *newConfT, update bool) {
 			fmt.Println("Config updated successfully!")
 		} else {
 			fmt.Println("Config created successfully!")
+		}
+		fmt.Println(configFile)
+		if argv.SetFilter {
+			createFilter(configFile)
 		}
 	} else {
 		fmt.Println("Error saving config File: " + err.Error())

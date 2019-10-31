@@ -9,21 +9,24 @@ import (
 
 type viewConfT struct {
 	cli.Helper
+	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
 }
 
 var viewConfCMD = &cli.Command{
 	Name:    "viewConfig",
-	Aliases: []string{"vconf", "viewc", "showconf", "showconfig", "config", "conf", "confshow", "confview"},
+	Aliases: []string{"vconf", "vc", "viewc", "showconf", "showconfig", "config", "conf", "confshow", "confview"},
 	Desc:    "View configuration file",
 	Argv:    func() interface{} { return new(viewConfT) },
 	Fn: func(ctx *cli.Context) error {
+		argv := ctx.Argv().(*viewConfT)
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			fmt.Println("Couldn't retrieve homeDir!")
 			return nil
 		}
 
-		confFile := getConfFile(getConfPath(homeDir))
+		confFile := getConfFile(getConfPath(homeDir), argv.ConfigName)
+		fmt.Println(confFile)
 		_, err = os.Stat(confFile)
 		if err != nil {
 			fmt.Println("No config found. Nothing to do.")
@@ -36,6 +39,12 @@ var viewConfCMD = &cli.Command{
 		fmt.Println("Host:\t\t", conf.Host)
 		fmt.Println("LogFile:\t", conf.LogFile)
 		fmt.Println("Token:\t\t", conf.Token)
+		fmt.Println("Filter: ")
+		filter := conf.Filter
+		fmt.Println("  min-Reason: \t", filter.MinReason, "1 = scanner, 2 spammer, 3 = bruteforcer")
+		fmt.Println("  Proxies allow:", filter.ProxyAllowed, "(-1 = false, 0 = true)")
+		fmt.Println("  min-Reports: \t", filter.MinReports)
+		fmt.Println("  maxIPs: \t", filter.MaxIPs)
 
 		return nil
 	},

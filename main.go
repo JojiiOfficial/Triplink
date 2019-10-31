@@ -17,7 +17,7 @@ var root = &cli.Command{
 	Desc: "this is root command",
 	Argv: func() interface{} { return new(argT) },
 	Fn: func(ctx *cli.Context) error {
-		fmt.Println("Usage: twreporter <report/(view/create/delete)config> [-f,-r,-t,-o]")
+		fmt.Println("Usage: twreporter <report/update/(view/create/delete)config/backup/restore> [-f,-r,-t,-o,-u,-a]")
 		return nil
 	},
 }
@@ -30,6 +30,9 @@ func main() {
 		cli.Tree(deleteConfCMD),
 		cli.Tree(viewConfCMD),
 		cli.Tree(updateCMD),
+		cli.Tree(backupCMD),
+		cli.Tree(restoreCMD),
+		cli.Tree(editConfCMD),
 	).Run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
