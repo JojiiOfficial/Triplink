@@ -98,7 +98,6 @@ var reportCMD = &cli.Command{
 			ips := strings.Split(strings.Trim(argv.CustomIPs, " "), ";")
 			for _, ip := range ips {
 				ip = strings.Trim(ip, " ")
-				fmt.Println(ip)
 				iptrp := ""
 				reason := 1
 				val := 0
