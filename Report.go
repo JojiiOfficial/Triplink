@@ -109,11 +109,27 @@ var reportCMD = &cli.Command{
 				} else {
 					iptrp = ip
 				}
-				valid, nvReason := isIPValid(iptrp)
-				if valid {
-					ipsToReport = append(ipsToReport, IPset{IP: iptrp, Reason: reason})
+				ipsToCheck := []string{}
+				if strings.Contains(iptrp, "/") {
+					iplist, err := cidrToIPlist(iptrp)
+					if err != nil {
+						fmt.Println("Error parsing CIDR:", err.Error())
+						fmt.Println("Skipping CIDR range!")
+						continue
+					}
+					for _, cip := range iplist {
+						ipsToCheck = append(ipsToCheck, cip)
+					}
 				} else {
-					fmt.Println("Ip is not valid:", iptrp, ipErrToString(nvReason), "skipping")
+					ipsToCheck = append(ipsToCheck, iptrp)
+				}
+				for _, icp := range ipsToCheck {
+					valid, nvReason := isIPValid(icp)
+					if valid {
+						ipsToReport = append(ipsToReport, IPset{IP: icp, Reason: reason})
+					} else {
+						fmt.Println("Ip is not valid:", icp, ipErrToString(nvReason), "skipping")
+					}
 				}
 			}
 		} else {
