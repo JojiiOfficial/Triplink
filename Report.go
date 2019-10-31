@@ -104,19 +104,17 @@ var reportCMD = &cli.Command{
 				if strings.Contains(ip, ",") {
 					dat := strings.Split(ip, ",")
 					dat[0] = strings.Trim(dat[0], " ")
-					dat[1] = strings.Trim(dat[1], " ")
-					iReason, err := strconv.Atoi(dat[1])
+					iReason, err := strconv.Atoi(strings.Trim(dat[1], " "))
 					if err == nil {
 						reason = iReason
 					}
 					if len(dat) == 3 {
-						dat[2] = strings.Trim(dat[2], " ")
-						ival, err := strconv.Atoi(dat[2])
+						ival, err := strconv.Atoi(strings.Trim(dat[2], " "))
 						if err == nil {
 							val = ival
 						}
 					}
-					iptrp = dat[0]
+					iptrp = strings.Trim(dat[0], " ")
 				} else {
 					iptrp = ip
 				}
@@ -215,7 +213,7 @@ const maxCountToBrute int = 20
 func IPrequestTimesToReason(timeList []time.Time) int {
 	if len(timeList) == 0 {
 		return -1
-	} else if len(timeList) <= 6 {
+	} else if len(timeList) <= 2 {
 		//return Scanner
 		return 1
 	}
@@ -259,7 +257,7 @@ func IPrequestTimesToReason(timeList []time.Time) int {
 		return 3
 	}
 
-	if spamCounter > 10 {
+	if spamCounter >= 7 {
 		return 2
 	}
 
