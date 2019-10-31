@@ -4,6 +4,7 @@ package main
 type IPset struct {
 	IP     string `json:"ip"`
 	Reason int    `json:"r"`
+	Valid  int    `json:"v"`
 }
 
 //ReportIPStruct incomming ip report

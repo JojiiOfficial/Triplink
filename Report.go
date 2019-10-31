@@ -95,15 +95,27 @@ var reportCMD = &cli.Command{
 		useLog := len(argv.CustomIPs) == 0
 		if !useLog {
 			fmt.Println("using arguments")
-			ips := strings.Split(argv.CustomIPs, ";")
+			ips := strings.Split(strings.Trim(argv.CustomIPs, " "), ";")
 			for _, ip := range ips {
+				ip = strings.Trim(ip, " ")
+				fmt.Println(ip)
 				iptrp := ""
 				reason := 1
+				val := 0
 				if strings.Contains(ip, ",") {
 					dat := strings.Split(ip, ",")
+					dat[0] = strings.Trim(dat[0], " ")
+					dat[1] = strings.Trim(dat[1], " ")
 					iReason, err := strconv.Atoi(dat[1])
 					if err == nil {
 						reason = iReason
+					}
+					if len(dat) == 3 {
+						dat[2] = strings.Trim(dat[2], " ")
+						ival, err := strconv.Atoi(dat[2])
+						if err == nil {
+							val = ival
+						}
 					}
 					iptrp = dat[0]
 				} else {
@@ -116,7 +128,7 @@ var reportCMD = &cli.Command{
 						fmt.Println("CIDR is no int! Skipping", iptrp)
 						continue
 					}
-					if cidr < 24 {
+					if cidr < 20 {
 						fmt.Println("You really want to report more than 256 IPs? I don't think so")
 						continue
 					}
@@ -135,7 +147,7 @@ var reportCMD = &cli.Command{
 				for _, icp := range ipsToCheck {
 					valid, nvReason := isIPValid(icp)
 					if valid {
-						ipsToReport = append(ipsToReport, IPset{IP: icp, Reason: reason})
+						ipsToReport = append(ipsToReport, IPset{IP: icp, Reason: reason, Valid: val})
 					} else {
 						fmt.Println("Ip is not valid:", icp, ipErrToString(nvReason), "skipping")
 					}
@@ -162,12 +174,11 @@ var reportCMD = &cli.Command{
 					continue
 				}
 				reason := IPrequestTimesToReason(t)
-				ipsToReport = append(ipsToReport, IPset{ip, reason})
+				ipsToReport = append(ipsToReport, IPset{ip, reason, 0})
 			}
 		}
 
 		if len(ipsToReport) > 0 {
-
 			reportStruct := ReportIPStruct{Token: config.Token, Ips: ipsToReport}
 
 			js, err := json.Marshal(reportStruct)
