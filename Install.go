@@ -62,24 +62,57 @@ func setIP(reader *bufio.Reader, config string) {
 		return
 	}
 	opt = strings.ToLower(opt)
-	mode := ""
 	sMode := ""
 	if opt == "b" {
-		sMode = "Backup"
-		mode = "b"
+		sMode = "backup"
 	} else if opt == "r" {
-		sMode = "Restore"
-		mode = "r"
+		sMode = "restore"
 	} else {
 		fmt.Println("What? Didn't understand '" + opt + "'. Type 't' or 'i'")
 		return
 	}
-
 	i, opt = waitForMessage("What to "+sMode+"?\n[1] IPset\n"+
 		"[2] IPtables\n"+
 		"[3] both\n> ", reader)
 	if i != 1 {
 		return
+	}
+	ex, err := os.Executable()
+	_ = ex
+	if err != nil {
+		panic(err)
+	}
+
+	i, text := waitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
+	if i != 1 {
+		fmt.Println("Abort")
+		return
+	}
+	if text != "@reboot" {
+		in, err := strconv.Atoi(text)
+		if err != nil {
+			fmt.Println("Not an integer")
+			return
+		}
+		if in < 0 || in > 59 {
+			fmt.Println("Your range must be between 0 and 60")
+			return
+		}
+	}
+	addCMD := sMode
+	if opt == "1" {
+		addCMD += " -s"
+	} else if opt == "2" {
+		addCMD += " -t -s=false"
+	} else if opt == "3" {
+		addCMD += " -s -t"
+	} else {
+		return
+	}
+	if text == "@reboot" {
+		crontabReboot(addCMD, ex)
+	} else {
+		crontabPeriodically(text, addCMD, ex)
 	}
 }
 
@@ -108,19 +141,21 @@ func setTripwire(reader *bufio.Reader, config string) {
 	if err != nil {
 		panic(err)
 	}
-	i, text = waitForMessage("In which period do you want to run this action [min]: ", reader)
+	i, text = waitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
 	if i != 1 {
 		fmt.Println("Abort")
 		return
 	}
-	in, err := strconv.Atoi(text)
-	if err != nil {
-		fmt.Println("Not an integer")
-		return
-	}
-	if in < 0 || in > 69 {
-		fmt.Println("Your range must be between 0 and 60")
-		return
+	if text != "@reboot" {
+		in, err := strconv.Atoi(text)
+		if err != nil {
+			fmt.Println("Not an integer")
+			return
+		}
+		if in < 0 || in > 59 {
+			fmt.Println("Your range must be between 0 and 60")
+			return
+		}
 	}
 	addCMD := ""
 	if opt == "1" {
@@ -132,7 +167,23 @@ func setTripwire(reader *bufio.Reader, config string) {
 	} else {
 		return
 	}
-	err = writeCrontab("*/" + text + " * * * * " + ex + " " + addCMD)
+	if text == "@reboot" {
+		crontabReboot(addCMD, ex)
+	} else {
+		crontabPeriodically(text, addCMD, ex)
+	}
+}
+
+func crontabReboot(addCMD, file string) {
+	crontab("@reboot " + file + " " + addCMD)
+}
+
+func crontabPeriodically(interval, addCMD, file string) {
+	crontab("*/" + interval + " * * * * " + file + " " + addCMD)
+}
+
+func crontab(content string) {
+	err := writeCrontab(content)
 	if err != nil {
 		fmt.Println("Error writing crontab: " + err.Error())
 	} else {
