@@ -7,7 +7,7 @@ Run
 go get
 go build -o twreporter
 ```
-you can move the binary into /usr/bin if you want using
+you can move the binary into /usr/bin if you want:
 ```
 sudo mv ./twreporter /usr/bin/twreporter
 ```
