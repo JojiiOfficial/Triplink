@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/user"
 	"strings"
 )
 
@@ -25,6 +27,14 @@ func getConfFile(confPath, confName string) string {
 		confName += ".json"
 	}
 	return confPath + confName
+}
+
+func getConfigPathFromHome(confName string) string {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return getConfFile(getConfPath(usr.HomeDir), confName)
 }
 
 func readConfig(file string) *Config {
