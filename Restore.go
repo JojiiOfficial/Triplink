@@ -10,6 +10,8 @@ import (
 
 type restoreT struct {
 	cli.Helper
+	RestoreIPtables bool `cli:"t,iptables" usage:"Restore iptables" dft:"false"`
+	RestoreIPset    bool `cli:"s,ipset" usage:"Restore ipset" dft:"true"`
 }
 
 var restoreCMD = &cli.Command{
@@ -18,39 +20,45 @@ var restoreCMD = &cli.Command{
 	Desc:    "restore ipset and iptables",
 	Argv:    func() interface{} { return new(restoreT) },
 	Fn: func(ctx *cli.Context) error {
+		argv := ctx.Argv().(*restoreT)
 		_, configFile := createAndValidateConfigFile("")
-		restoreIPs(configFile)
+		restoreIPs(configFile, argv.RestoreIPset, argv.RestoreIPtables)
 		return nil
 	},
 }
 
-func restoreIPs(configFile string) {
+func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 	configFolder, _ := path.Split(configFile)
 	iptablesFile := configFolder + "iptables.bak"
 	ipsetFile := configFolder + "ipset.bak"
 
-	_, err := os.Stat(ipsetFile)
-	if err != nil {
-		_, err = os.Create(ipsetFile)
-		fmt.Println("Thereis no ipset backup!")
-	} else {
-		_, err = runCommand(nil, "ipset restore < "+ipsetFile)
+	if restoreIPset {
+
+		_, err := os.Stat(ipsetFile)
 		if err != nil {
-			fmt.Println("Error restoring ipset:", err.Error())
+			_, err = os.Create(ipsetFile)
+			fmt.Println("Thereis no ipset backup!")
 		} else {
-			fmt.Println("Successfully restored ipset")
+			_, err = runCommand(nil, "ipset restore < "+ipsetFile)
+			if err != nil {
+				fmt.Println("Error restoring ipset:", err.Error())
+			} else {
+				fmt.Println("Successfully restored ipset")
+			}
 		}
 	}
 
-	_, err = os.Stat(iptablesFile)
-	if err != nil {
-		fmt.Println("There is no iptables backup!")
-	} else {
-		_, err = runCommand(nil, "iptables-restore < "+iptablesFile)
+	if restoreIPtables {
+		_, err := os.Stat(iptablesFile)
 		if err != nil {
-			fmt.Println("Error restoring iptables:", err.Error())
+			fmt.Println("There is no iptables backup!")
 		} else {
-			fmt.Println("Successfully restored iptables")
+			_, err = runCommand(nil, "iptables-restore < "+iptablesFile)
+			if err != nil {
+				fmt.Println("Error restoring iptables:", err.Error())
+			} else {
+				fmt.Println("Successfully restored iptables")
+			}
 		}
 	}
 }
