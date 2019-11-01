@@ -42,9 +42,18 @@ var viewConfCMD = &cli.Command{
 		fmt.Println("Filter: ")
 		filter := conf.Filter
 		fmt.Println("  min-Reason: \t", filter.MinReason, "1 = scanner, 2 spammer, 3 = bruteforcer")
-		fmt.Println("  Proxies allow:", filter.ProxyAllowed, "(-1 = false, 0 = true)")
+		pa := "no"
+		if filter.ProxyAllowed == 0 {
+			pa = "yes"
+		}
+		fmt.Println("  Proxies allow:", pa)
 		fmt.Println("  min-Reports: \t", filter.MinReports)
 		fmt.Println("  maxIPs: \t", filter.MaxIPs)
+		ov := "yes"
+		if filter.OnlyValidatedIPs == 0 {
+			ov = "no"
+		}
+		fmt.Println("  only valid:\t", ov)
 
 		return nil
 	},

@@ -10,11 +10,10 @@ import (
 
 //Config the global config struct
 type Config struct {
-	Host       string      `json:"host"`
-	LogFile    string      `json:"logfile"`
-	Token      string      `json:"token"`
-	LastUpdate int64       `json:"lastupdate"`
-	Filter     FetchFilter `json:"fetchFilter"`
+	Host    string      `json:"host"`
+	LogFile string      `json:"logfile"`
+	Token   string      `json:"token"`
+	Filter  FetchFilter `json:"fetchFilter"`
 }
 
 func getConfPath(homeDir string) string {

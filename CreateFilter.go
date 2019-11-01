@@ -74,6 +74,21 @@ func createFilter(config string) {
 		}
 	}
 
+	fmt.Print("Only validated IPs [y/n]: ")
+	text, _ = reader.ReadString('\n')
+	text = strings.ReplaceAll(text, "\n", "")
+	if len(text) > 0 {
+		if text == "A" {
+			return
+		}
+		conf.Filter.OnlyValidatedIPs = 0
+		if text == "no" || text == "n" || text == "0" || text == "false" {
+			conf.Filter.OnlyValidatedIPs = 0
+		} else if text == "yes" || text == "y" || text == "1" || text == "true" {
+			conf.Filter.OnlyValidatedIPs = -1
+		}
+	}
+
 	err := conf.save(config)
 	if err != nil {
 		fmt.Println("Error saving config: " + err.Error())
