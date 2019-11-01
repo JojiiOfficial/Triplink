@@ -20,6 +20,10 @@ var restoreCMD = &cli.Command{
 	Desc:    "restore ipset and iptables",
 	Argv:    func() interface{} { return new(restoreT) },
 	Fn: func(ctx *cli.Context) error {
+		if os.Getuid() != 0 {
+			fmt.Println("You need to be root!")
+			return nil
+		}
 		argv := ctx.Argv().(*restoreT)
 		_, configFile := createAndValidateConfigFile("")
 		restoreIPs(configFile, argv.RestoreIPset, argv.RestoreIPtables)

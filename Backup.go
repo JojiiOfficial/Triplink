@@ -20,6 +20,10 @@ var backupCMD = &cli.Command{
 	Desc:    "backups ipset(-s) and (iptables with -t)",
 	Argv:    func() interface{} { return new(backupT) },
 	Fn: func(ctx *cli.Context) error {
+		if os.Getuid() != 0 {
+			fmt.Println("You need to be root!")
+			return nil
+		}
 		argv := ctx.Argv().(*backupT)
 		_, configFile := createAndValidateConfigFile("")
 		backupIPs(configFile, argv.BackupIPset, argv.BackupIPtables)

@@ -21,9 +21,11 @@ var installCMD = &cli.Command{
 	Desc:    "Setup automatic reports/updates easily",
 	Argv:    func() interface{} { return new(installT) },
 	Fn: func(ctx *cli.Context) error {
+		if os.Getuid() != 0 {
+			fmt.Println("You need to be root!")
+			return nil
+		}
 		argv := ctx.Argv().(*installT)
-		_ = argv
-
 		reader := bufio.NewReader(os.Stdin)
 		i, text := waitForMessage("What kind of system do you want to setup?\n[t] Tripwire\n[i] iptables/set\n> ", reader)
 		if i == -1 {
@@ -116,8 +118,8 @@ func setIP(reader *bufio.Reader, config string) {
 	}
 }
 
-func setTripwire(reader *bufio.Reader, config string) {
-	config = getConfigPathFromHome(config)
+func setTripwire(reader *bufio.Reader, c string) {
+	config := getConfigPathFromHome(c)
 	if handleConfig(config) {
 		return
 	}
@@ -163,11 +165,11 @@ func setTripwire(reader *bufio.Reader, config string) {
 	}
 	addCMD := ""
 	if opt == "1" {
-		addCMD = "u"
+		addCMD = "u" + " -C=\"" + c + "\""
 	} else if opt == "2" {
-		addCMD = "r -u"
+		addCMD = "r -u" + " -C=\"" + c + "\""
 	} else if opt == "3" {
-		addCMD = "r"
+		addCMD = "r" + " -C=\"" + c + "\""
 	} else {
 		return
 	}
