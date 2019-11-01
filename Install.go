@@ -30,8 +30,10 @@ var installCMD = &cli.Command{
 			return nil
 		}
 		if i == 1 {
-			if text == "t" || text == "i" {
+			if text == "t" {
 				setTripwire(reader, argv.ConfigName)
+			} else if text == "i" {
+				setIP(reader, argv.ConfigName)
 			} else {
 				fmt.Println("What? Didn't understand '" + text + "'. Type 't' or 'i'")
 				return nil
@@ -50,6 +52,10 @@ var installCMD = &cli.Command{
 		//2. Restore iptables & ipset
 		return nil
 	},
+}
+
+func setIP(reader *bufio.Reader, config string) {
+
 }
 
 func setTripwire(reader *bufio.Reader, config string) {
