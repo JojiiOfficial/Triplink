@@ -30,6 +30,7 @@ var installCMD = &cli.Command{
 			return nil
 		}
 		if i == 1 {
+			text = strings.ToLower(text)
 			if text == "t" {
 				setTripwire(reader, argv.ConfigName)
 			} else if text == "i" {
@@ -55,7 +56,31 @@ var installCMD = &cli.Command{
 }
 
 func setIP(reader *bufio.Reader, config string) {
+	i, opt := waitForMessage("Backup or Restore?\n[b] Backup\n"+
+		"[r] Restore\n> ", reader)
+	if i != 1 {
+		return
+	}
+	opt = strings.ToLower(opt)
+	mode := ""
+	sMode := ""
+	if opt == "b" {
+		sMode = "Backup"
+		mode = "b"
+	} else if opt == "r" {
+		sMode = "Restore"
+		mode = "r"
+	} else {
+		fmt.Println("What? Didn't understand '" + opt + "'. Type 't' or 'i'")
+		return
+	}
 
+	i, opt = waitForMessage("What to "+sMode+"?\n[1] IPset\n"+
+		"[2] IPtables\n"+
+		"[3] both\n> ", reader)
+	if i != 1 {
+		return
+	}
 }
 
 func setTripwire(reader *bufio.Reader, config string) {
