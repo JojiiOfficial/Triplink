@@ -9,7 +9,7 @@ import (
 
 type editConfT struct {
 	cli.Helper
-	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
+	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from"`
 	Host       string `cli:"r,host" usage:"Specify the host to send the data to"`
 	SetFilter  bool   `cli:"F,filter" usage:"Specify to set the filter after creating the config" dft:"false"`

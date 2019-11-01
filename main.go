@@ -30,6 +30,7 @@ func main() {
 		cli.Tree(deleteConfCMD),
 		cli.Tree(viewConfCMD),
 		cli.Tree(updateCMD),
+		cli.Tree(installCMD),
 		cli.Tree(backupCMD),
 		cli.Tree(restoreCMD),
 		cli.Tree(editConfCMD),

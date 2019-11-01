@@ -13,7 +13,7 @@ type newConfT struct {
 	Token      string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
 	Overwrite  bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
 	SetFilter  bool   `cli:"F,filter" usage:"Specify to set the filter after creating the config" dft:"false"`
-	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
+	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 }
 
 var createConfCMD = &cli.Command{

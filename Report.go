@@ -21,7 +21,7 @@ type reportT struct {
 	UpdateEverything bool   `cli:"a,all" usage:"Specify if the client should update everything if update is set" dft:"false"`
 	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset"`
 	IgnoreCert       bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
-	ConfigName       string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
+	ConfigName       string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 }
 
 var reportCMD = &cli.Command{

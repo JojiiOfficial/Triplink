@@ -14,7 +14,7 @@ type updateConfT struct {
 	cli.Helper
 	Host       string `cli:"r,host" usage:"Specify the host to send the data to"`
 	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
-	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
+	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	FetchAll   bool   `cli:"a,all" usage:"Fetches everything"`
 	IgnoreCert bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
 }

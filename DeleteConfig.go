@@ -9,7 +9,7 @@ import (
 
 type deleteConfT struct {
 	cli.Helper
-	ConfigName string `cli:"C,config" usage:"Secify the config to use" dft:"config.json"`
+	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 }
 
 var deleteConfCMD = &cli.Command{
