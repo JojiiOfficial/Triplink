@@ -122,26 +122,30 @@ func setTripwire(reader *bufio.Reader, config string) {
 		return
 	}
 	i, opt := waitForMessage("How should Tripwire act?\n[1] Fetch and block IPs from server based on a filter\n"+
-		"[2] Report IPs based on a filter defined by you\n"+
-		"[3] Report IPs only without blocking them\n> ", reader)
+		"[2] Report IPs and block them using a filter\n"+
+		"[3] Report IPs only without pulling or blocking\n> ", reader)
+
 	if i != 1 {
 		return
 	}
+
 	if opt != "1" && opt != "2" && opt != "3" {
 		fmt.Println("What? Enter 1,2 or 3")
 		return
 	}
 
-	i, text := waitForMessage("Do you want to update the filter assigned to this config [y/n] ", reader)
-	if i == 1 && (text == "y" || text == "yes") {
-		createFilter(config)
+	if opt != "3" {
+		i, text := waitForMessage("Do you want to update the filter assigned to this config [y/n] ", reader)
+		if i == 1 && (text == "y" || text == "yes") {
+			createFilter(config)
+		}
 	}
 
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
 	}
-	i, text = waitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
+	i, text := waitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
 	if i != 1 {
 		fmt.Println("Abort")
 		return
@@ -161,9 +165,9 @@ func setTripwire(reader *bufio.Reader, config string) {
 	if opt == "1" {
 		addCMD = "u"
 	} else if opt == "2" {
-		addCMD = "r"
-	} else if opt == "3" {
 		addCMD = "r -u"
+	} else if opt == "3" {
+		addCMD = "r"
 	} else {
 		return
 	}
