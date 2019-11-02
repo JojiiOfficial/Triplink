@@ -53,4 +53,8 @@ sudo mv ./twreporter /usr/bin/twreporter
 ```
 # twreporter install
 ```
-<b>Note:</b> To uninstall those automations use `crontab -e` and remove the line you don't want to have automated
+<b>Note:</b> In some cron installations the $PATH var is not set to the path where iptables or ipset is installed in. If you get an error or the cronjob doesn't work you can either create a symbolic link in `/bin/iptables -> 'your iptables binary'` and `/bin/ipset -> 'your ipset binary` or you can set a custom $PATH in the crontab:
+```
+PATH=/usr/sbin:/bin:/sbin:/usr/bin      #Make sure ipset and iptables are in one of those folders
+```
+To uninstall those automations use `crontab -e` and remove the line you don't want to have automated
