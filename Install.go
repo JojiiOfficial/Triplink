@@ -195,6 +195,12 @@ func crontab(content string) {
 	} else {
 		fmt.Println("Installed successfully")
 	}
+	_, err = runCommand(nil, "systemctl restart cron")
+	if err != nil {
+		fmt.Println("Error restarting cron!")
+	} else {
+		fmt.Println("Restarted cron successfully")
+	}
 }
 
 func writeCrontab(cronCommand string) error {

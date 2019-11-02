@@ -70,7 +70,7 @@ func appendLogs(newf, logs string) {
 }
 
 func runCommand(errorHandler func(error, string), sCmd string) (outb string, err error) {
-	out, err := exec.Command("su", "-c", sCmd).Output()
+	out, err := exec.Command("sh", "-c", sCmd).Output()
 	output := string(out)
 	if err != nil {
 		if errorHandler != nil {
