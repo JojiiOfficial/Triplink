@@ -33,6 +33,7 @@ func main() {
 		cli.Tree(installCMD),
 		cli.Tree(backupCMD),
 		cli.Tree(restoreCMD),
+		cli.Tree(delBackupCMD),
 		cli.Tree(editConfCMD),
 	).Run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
