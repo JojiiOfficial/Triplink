@@ -197,7 +197,7 @@ var reportCMD = &cli.Command{
 			}
 
 		} else {
-			LogError("Nothing to do (reporting)")
+			LogInfo("Nothing to do (reporting)")
 		}
 
 		if useLog {

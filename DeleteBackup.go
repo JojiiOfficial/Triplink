@@ -28,7 +28,7 @@ var delBackupCMD = &cli.Command{
 		}
 		argv := ctx.Argv().(*delBackupT)
 		if !argv.BackupIPtables && !argv.BackupIPset {
-			fmt.Println("nothing to do")
+			LogInfo("nothing to do")
 			return nil
 		}
 		_, configFile := createAndValidateConfigFile("")
