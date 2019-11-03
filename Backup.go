@@ -41,15 +41,15 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 		if err != nil {
 			_, err = os.Create(iptablesFile)
 			if err != nil {
-				fmt.Println("Can't create backup file: " + iptablesFile)
+				LogError("Can't create backup file: " + iptablesFile)
 			}
 		}
 
 		_, err = runCommand(nil, "iptables-save > "+iptablesFile)
 		if err != nil {
-			fmt.Println("Couldn'd backup iptables:", err.Error())
+			LogError("Couldn'd backup iptables: " + err.Error())
 		} else {
-			fmt.Println("Iptables backup successfull")
+			LogInfo("Iptables backup successfull")
 		}
 	}
 
@@ -58,16 +58,16 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 		if err != nil {
 			_, err = os.Create(ipsetFile)
 			if err != nil {
-				fmt.Println("Can't create backup file: " + ipsetFile)
+				LogError("Can't create backup file: " + ipsetFile)
 				return
 			}
 		}
 
 		_, err = runCommand(nil, "ipset save blocklist > "+ipsetFile)
 		if err != nil {
-			fmt.Println("Couldn'd backup ipset:", err.Error())
+			LogError("Couldn'd backup ipset: " + err.Error())
 		} else {
-			fmt.Println("Ipset backup successfull")
+			LogInfo("Ipset backup successfull")
 		}
 	}
 }

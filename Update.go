@@ -89,7 +89,7 @@ func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
 	data = strings.ReplaceAll(data, "\n", "")
 	if err != nil || data == "\"[]\"" {
 		if data == "\"[]\"" {
-			fmt.Println("Nothing to do (updating)")
+			LogInfo("Nothing to do (updating)")
 		}
 		return err
 	}
@@ -123,7 +123,7 @@ func blockIPs(ips []IPList) {
 		}
 	}
 	if activateIPset() {
-		fmt.Println("Successfully added "+strconv.Itoa(addCount), "and removed "+strconv.Itoa(remCount), "IPs")
+		LogInfo("Successfully added " + strconv.Itoa(addCount) + " and removed " + strconv.Itoa(remCount) + " IPs")
 	}
 }
 
@@ -133,7 +133,7 @@ func activateIPset() bool {
 	}
 	_, err := runCommand(nil, "iptables -I INPUT -m set --match-set blocklist src -j DROP")
 	if err != nil {
-		fmt.Println("Couldn't activate iptable set. Blocking might be unavailable:", err.Error())
+		LogError("Couldn't activate iptable set. Blocking might be unavailable: " + err.Error())
 		return false
 	}
 	return true
@@ -169,7 +169,7 @@ func ipsetRemoveIP(ip string) bool {
 func checkCommands() bool {
 	_, err := runCommand(nil, "ipset help")
 	if err != nil {
-		fmt.Println("You need to install 'ipset' to run this command!")
+		LogInfo("You need to install 'ipset' to run this command!")
 		return false
 	}
 	return true
@@ -188,7 +188,7 @@ func createBlocklist() bool {
 func setupIPset() {
 	if !hasBlocklist() {
 		if !createBlocklist() {
-			fmt.Println("Couldn't create blocklist! Exiting")
+			LogError("Couldn't create blocklist! Exiting")
 			os.Exit(1)
 		}
 	}

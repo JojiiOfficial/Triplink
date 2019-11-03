@@ -64,12 +64,12 @@ func delBackup(configFile string, deleteIPset, deleteIPtables, ignoreConfirm boo
 		if err == nil {
 			err = os.Remove(iptablesFile)
 			if err != nil {
-				fmt.Println("Can't delete backup file: " + iptablesFile)
+				LogError("Can't delete backup file: " + iptablesFile)
 			} else {
-				fmt.Println("Successfully deleted IPtables backup")
+				LogInfo("Successfully deleted IPtables backup")
 			}
 		} else {
-			fmt.Println("No IPtables backup found. Skipping")
+			LogInfo("No IPtables backup found. Skipping")
 		}
 	}
 
@@ -78,12 +78,12 @@ func delBackup(configFile string, deleteIPset, deleteIPtables, ignoreConfirm boo
 		if err == nil {
 			err = os.Remove(ipsetFile)
 			if err == nil {
-				fmt.Println("Successfully deleted IPset backup")
+				LogInfo("Successfully deleted IPset backup")
 			} else {
-				fmt.Println("Can't delete backup file: " + ipsetFile)
+				LogError("Can't delete backup file: " + ipsetFile)
 			}
 		} else {
-			fmt.Println("No IPset backup found. Skipping")
+			LogInfo("No IPset backup found. Skipping")
 		}
 
 	}

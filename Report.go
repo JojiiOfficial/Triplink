@@ -48,7 +48,7 @@ var reportCMD = &cli.Command{
 			}
 			logFileExists := validateLogFile(argv.LogFile)
 			if !logFileExists {
-				fmt.Println("Logfile doesn't exists")
+				LogError("Logfile doesn't exists")
 				return nil
 			}
 			config = &Config{
@@ -68,7 +68,7 @@ var reportCMD = &cli.Command{
 			}
 			logFileExists := validateLogFile(logFile)
 			if !logFileExists {
-				fmt.Println("Logfile doesn't exists")
+				LogError("Logfile doesn't exists")
 				return nil
 			}
 			if len(argv.Host) > 0 {
@@ -90,18 +90,18 @@ var reportCMD = &cli.Command{
 
 		logFileExists := validateLogFile(config.LogFile)
 		if !logFileExists {
-			fmt.Println("Logfile doesn't exists")
+			LogError("Logfile doesn't exists")
 			return nil
 		}
 
 		if argv.UpdateEverything && !argv.DoUpdate {
-			fmt.Println("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
+			LogInfo("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
 		}
 
 		ipsToReport := []IPset{}
 		useLog := len(argv.CustomIPs) == 0
 		if !useLog {
-			fmt.Println("using arguments")
+			LogInfo("using arguments")
 			ips := strings.Split(strings.Trim(argv.CustomIPs, " "), ";")
 			for _, ip := range ips {
 				ip = strings.Trim(ip, " ")
@@ -129,17 +129,17 @@ var reportCMD = &cli.Command{
 				if strings.Contains(iptrp, "/") {
 					cidr, err := strconv.Atoi(strings.Split(iptrp, "/")[1])
 					if err != nil {
-						fmt.Println("CIDR is no int! Skipping", iptrp)
+						LogError("CIDR is no int! Skipping " + iptrp)
 						continue
 					}
 					if cidr < 20 {
-						fmt.Println("You really want to report more than 256 IPs? I don't think so")
+						LogError("You really want to report more than 256 IPs? I don't think so")
 						continue
 					}
 					iplist, err := cidrToIPlist(iptrp)
 					if err != nil {
-						fmt.Println("Error parsing CIDR:", err.Error())
-						fmt.Println("Skipping CIDR range!")
+						LogError("Error parsing CIDR:" + err.Error())
+						LogInfo("Skipping CIDR range!")
 						continue
 					}
 					for _, cip := range iplist {
@@ -153,12 +153,12 @@ var reportCMD = &cli.Command{
 					if valid {
 						ipsToReport = append(ipsToReport, IPset{IP: icp, Reason: reason, Valid: val})
 					} else {
-						fmt.Println("Ip is not valid:", icp, ipErrToString(nvReason), "skipping")
+						LogError("Ip is not valid: " + icp + " " + ipErrToString(nvReason) + " skipping")
 					}
 				}
 			}
 		} else {
-			fmt.Println("using log: ", config.LogFile)
+			LogInfo("using log: " + config.LogFile)
 			ipTime := make(map[string]([]time.Time))
 			err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
 				_, has := ipTime[log.Src]
@@ -170,7 +170,7 @@ var reportCMD = &cli.Command{
 			})
 
 			if err != nil {
-				fmt.Println("Can't read File: ", err.Error())
+				LogError("Can't read File: " + err.Error())
 			}
 			for ip, t := range ipTime {
 				valid, _ := isIPValid(ip)
@@ -191,13 +191,13 @@ var reportCMD = &cli.Command{
 
 			resp, err := request(config.Host, "report", js, argv.IgnoreCert)
 			if err != nil {
-				fmt.Println("error making request: " + err.Error())
+				LogCritical("error making request: " + err.Error())
 			} else {
-				fmt.Print(resp)
+				LogInfo(resp)
 			}
 
 		} else {
-			fmt.Println("Nothing to do (reporting)")
+			LogError("Nothing to do (reporting)")
 		}
 
 		if useLog {

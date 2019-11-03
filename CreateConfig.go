@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 
 	"github.com/mkideal/cli"
@@ -34,7 +33,7 @@ var createConfCMD = &cli.Command{
 		}
 		logFileExists := validateLogFile(argv.LogFile)
 		if !logFileExists {
-			fmt.Println("Warning: Logfile doesn't exists!!")
+			LogInfo("Warning: Logfile doesn't exists!!")
 		}
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		if logStatus == 0 {
@@ -43,7 +42,7 @@ var createConfCMD = &cli.Command{
 			if argv.Overwrite {
 				createConf(configFile, argv, true)
 			} else {
-				fmt.Println("There is alread a config file! use -o to overwrite it!")
+				LogInfo("There is alread a config file! use -o to overwrite it!")
 			}
 		}
 
@@ -60,15 +59,15 @@ func createConf(configFile string, argv *newConfT, update bool) {
 	}).save(configFile)
 	if err == nil {
 		if update {
-			fmt.Println("Config updated successfully!")
+			LogInfo("Config updated successfully!")
 		} else {
-			fmt.Println("Config created successfully!")
+			LogInfo("Config created successfully!")
 		}
-		fmt.Println(configFile)
+		LogInfo(configFile)
 		if argv.SetFilter {
 			createFilter(configFile)
 		}
 	} else {
-		fmt.Println("Error saving config File: " + err.Error())
+		LogError("Error saving config File: " + err.Error())
 	}
 }
