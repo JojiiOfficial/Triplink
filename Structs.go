@@ -10,6 +10,7 @@ type IPset struct {
 //ReportIPStruct incomming ip report
 type ReportIPStruct struct {
 	Token string  `json:"token"`
+	Note  string  `json:"note"`
 	Ips   []IPset `json:"ips"`
 }
 

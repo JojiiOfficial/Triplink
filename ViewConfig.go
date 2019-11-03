@@ -39,6 +39,7 @@ var viewConfCMD = &cli.Command{
 		fmt.Println("Host:\t\t", conf.Host)
 		fmt.Println("LogFile:\t", conf.LogFile)
 		fmt.Println("Token:\t\t", conf.Token)
+		fmt.Println("Note:\t\t", "\""+conf.Note+"\"")
 		fmt.Println("Filter: ")
 		filter := conf.Filter
 		fmt.Println("  min-Reason: \t", filter.MinReason, "1 = scanner, 2 spammer, 3 = bruteforcer")
@@ -54,7 +55,7 @@ var viewConfCMD = &cli.Command{
 			ov = "no"
 		}
 		fmt.Println("  only valid:\t", ov)
-		fmt.Println("\ntwreporter cc -t "+conf.Token, "-r", conf.Host, "-f", conf.LogFile)
+		fmt.Println("\ntwreporter cc -t "+conf.Token, "-r", conf.Host, "-f", conf.LogFile, "-n", "\""+conf.Note+"\"")
 
 		return nil
 	},

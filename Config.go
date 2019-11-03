@@ -16,6 +16,7 @@ type Config struct {
 	LogFile string      `json:"logfile"`
 	Token   string      `json:"token"`
 	Filter  FetchFilter `json:"fetchFilter"`
+	Note    string      `json:"note"`
 }
 
 func getConfPath(homeDir string) string {
