@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 
 	"github.com/mkideal/cli"
 )
@@ -23,11 +25,15 @@ var createConfCMD = &cli.Command{
 	Argv:    func() interface{} { return new(newConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*newConfT)
-
+		if os.Getuid() != 0 {
+			reader := bufio.NewReader(os.Stdin)
+			if y, _ := confirmInput("Warning! You are not root! Only root can report and fetch. Continue anyway? [y/n] ", reader); !y {
+				return nil
+			}
+		}
 		logFileExists := validateLogFile(argv.LogFile)
 		if !logFileExists {
-			fmt.Println("Logfile doesn't exists")
-			return nil
+			fmt.Println("Warning: Logfile doesn't exists!!")
 		}
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		if logStatus == 0 {

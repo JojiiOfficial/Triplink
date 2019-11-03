@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 )
 
 func createFilter(config string) {
@@ -14,14 +13,16 @@ func createFilter(config string) {
 
 	conf := readConfig(config)
 
-	fmt.Print("\nWhich-min reason an IP must have to get blocked [1.0-3.0]: ")
-	text, _ := reader.ReadString('\n')
-	text = strings.ReplaceAll(text, "\n", "")
-	if len(text) > 0 {
-		if text == "A" {
+	i, txt := WaitForMessage("\nWhich-min reason an IP must have to get blocked [1.0-3.0]: ", reader)
+	if i == -1 {
+		return
+	}
+	if i == 1 {
+		minReason, err := strconv.ParseFloat(txt, 64)
+		if minReason <= 0 || minReason > 3 {
+			fmt.Println("Error! Choose a number between 1.0 and 3.0")
 			return
 		}
-		minReason, err := strconv.ParseFloat(text, 64)
 		if err == nil {
 			conf.Filter.MinReason = minReason
 		} else {
@@ -29,14 +30,12 @@ func createFilter(config string) {
 		}
 	}
 
-	fmt.Print("Which min amount of reports an IP must have to get blocked: ")
-	text, _ = reader.ReadString('\n')
-	text = strings.ReplaceAll(text, "\n", "")
-	if len(text) > 0 {
-		if text == "A" {
-			return
-		}
-		mineports, err := strconv.Atoi(text)
+	i, txt = WaitForMessage("Which min amount of reports an IP must have to get blocked: ", reader)
+	if i == -1 {
+		return
+	}
+	if i == 1 {
+		mineports, err := strconv.Atoi(txt)
 		if err == nil {
 			conf.Filter.MinReports = mineports
 		} else {
@@ -44,48 +43,44 @@ func createFilter(config string) {
 		}
 	}
 
-	fmt.Print("Allow proxies like tor-exit-nodes [y/n]: ")
-	text, _ = reader.ReadString('\n')
-	text = strings.ReplaceAll(text, "\n", "")
-	if len(text) > 0 {
-		if text == "A" {
-			return
-		}
-		conf.Filter.ProxyAllowed = 0
-		if text == "no" || text == "n" || text == "0" || text == "false" {
+	y, i := confirmInput("Allow proxies like tor-exit-nodes [y/n]: ", reader)
+	if i == -1 {
+		return
+	}
+	if i == 1 {
+		if !y {
 			conf.Filter.ProxyAllowed = -1
-		} else if text == "yes" || text == "y" || text == "1" || text == "true" {
+		} else {
 			conf.Filter.ProxyAllowed = 0
 		}
 	}
 
-	fmt.Print("Set a limit of max IPs you want to block [0=no limit]: ")
-	text, _ = reader.ReadString('\n')
-	text = strings.ReplaceAll(text, "\n", "")
-	if len(text) > 0 {
-		if text == "A" {
-			return
-		}
-		limit, err := strconv.Atoi(text)
+	i, txt = WaitForMessage("Set a limit of max IPs you want to block [0=no limit]: ", reader)
+	if i == -1 {
+		return
+	}
+	if i == 1 {
+		limit, err := strconv.Atoi(txt)
 		if err == nil {
+			if limit < 0 {
+				fmt.Println("Can't be less than 0!")
+				return
+			}
 			conf.Filter.MaxIPs = uint(limit)
 		} else {
 			fmt.Println("Not an int. Skipping.")
 		}
 	}
 
-	fmt.Print("Only validated IPs [y/n]: ")
-	text, _ = reader.ReadString('\n')
-	text = strings.ReplaceAll(text, "\n", "")
-	if len(text) > 0 {
-		if text == "A" {
-			return
-		}
-		conf.Filter.OnlyValidatedIPs = 0
-		if text == "no" || text == "n" || text == "0" || text == "false" {
-			conf.Filter.OnlyValidatedIPs = 0
-		} else if text == "yes" || text == "y" || text == "1" || text == "true" {
+	y, i = confirmInput("Only validated IPs [y/n]: ", reader)
+	if i == -1 {
+		return
+	}
+	if i == 1 {
+		if y {
 			conf.Filter.OnlyValidatedIPs = -1
+		} else {
+			conf.Filter.OnlyValidatedIPs = 0
 		}
 	}
 

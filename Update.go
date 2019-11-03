@@ -133,7 +133,7 @@ func activateIPset() bool {
 	}
 	_, err := runCommand(nil, "iptables -I INPUT -m set --match-set blocklist src -j DROP")
 	if err != nil {
-		fmt.Println("Couldn't activate iptable set. Blocking might be unavailable")
+		fmt.Println("Couldn't activate iptable set. Blocking might be unavailable:", err.Error())
 		return false
 	}
 	return true

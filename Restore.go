@@ -16,7 +16,7 @@ type restoreT struct {
 
 var restoreCMD = &cli.Command{
 	Name:    "restore",
-	Aliases: []string{"res", "restore"},
+	Aliases: []string{"res", "restore", "rest"},
 	Desc:    "restore ipset and iptables",
 	Argv:    func() interface{} { return new(restoreT) },
 	Fn: func(ctx *cli.Context) error {
@@ -37,7 +37,6 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 	ipsetFile := configFolder + "ipset.bak"
 
 	if restoreIPset {
-
 		_, err := os.Stat(ipsetFile)
 		if err != nil {
 			_, err = os.Create(ipsetFile)

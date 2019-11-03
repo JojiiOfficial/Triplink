@@ -54,6 +54,7 @@ var viewConfCMD = &cli.Command{
 			ov = "no"
 		}
 		fmt.Println("  only valid:\t", ov)
+		fmt.Println("\ntwreporter cc -t "+conf.Token, "-r", conf.Host, "-f", conf.LogFile)
 
 		return nil
 	},

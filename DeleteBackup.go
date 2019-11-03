@@ -52,8 +52,8 @@ func delBackup(configFile string, deleteIPset, deleteIPtables, ignoreConfirm boo
 			whatToDelete = "IPtables"
 		}
 		reader := bufio.NewReader(os.Stdin)
-		_, txt := waitForMessage("Do you really want to delete "+whatToDelete+" backup [y/n] > ", reader)
-		if txt != "y" && txt != "yes" {
+
+		if y, _ := confirmInput("Do you really want to delete "+whatToDelete+" backup [y/n] > ", reader); y {
 			fmt.Println("Exiting")
 			return
 		}

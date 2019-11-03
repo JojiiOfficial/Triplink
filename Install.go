@@ -27,7 +27,7 @@ var installCMD = &cli.Command{
 		}
 		argv := ctx.Argv().(*installT)
 		reader := bufio.NewReader(os.Stdin)
-		i, text := waitForMessage("What kind of system do you want to setup?\n[t] Tripwire\n[i] iptables/set\n> ", reader)
+		i, text := WaitForMessage("What kind of system do you want to setup?\n[t] Tripwire\n[i] iptables/set\n> ", reader)
 		if i == -1 {
 			return nil
 		}
@@ -58,7 +58,7 @@ var installCMD = &cli.Command{
 }
 
 func setIP(reader *bufio.Reader, config string) {
-	i, opt := waitForMessage("Backup or Restore?\n[b] Backup\n"+
+	i, opt := WaitForMessage("Backup or Restore?\n[b] Backup\n"+
 		"[r] Restore\n> ", reader)
 	if i != 1 {
 		return
@@ -73,7 +73,7 @@ func setIP(reader *bufio.Reader, config string) {
 		fmt.Println("What? Didn't understand '" + opt + "'. Type 't' or 'i'")
 		return
 	}
-	i, opt = waitForMessage("What to "+sMode+"?\n[1] IPset\n"+
+	i, opt = WaitForMessage("What to "+sMode+"?\n[1] IPset\n"+
 		"[2] IPtables\n"+
 		"[3] both\n> ", reader)
 	if i != 1 {
@@ -85,7 +85,7 @@ func setIP(reader *bufio.Reader, config string) {
 		panic(err)
 	}
 
-	i, text := waitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
+	i, text := WaitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
 	if i != 1 {
 		fmt.Println("Abort")
 		return
@@ -123,7 +123,7 @@ func setTripwire(reader *bufio.Reader, c string) {
 	if handleConfig(config) {
 		return
 	}
-	i, opt := waitForMessage("How should Tripwire act?\n[1] Fetch and block IPs from server based on a filter\n"+
+	i, opt := WaitForMessage("How should Tripwire act?\n[1] Fetch and block IPs from server based on a filter\n"+
 		"[2] Report IPs and block them using a filter\n"+
 		"[3] Report IPs only without pulling or blocking\n> ", reader)
 
@@ -137,8 +137,7 @@ func setTripwire(reader *bufio.Reader, c string) {
 	}
 
 	if opt != "3" {
-		i, text := waitForMessage("Do you want to update the filter assigned to this config [y/n] ", reader)
-		if i == 1 && (text == "y" || text == "yes") {
+		if y, _ := confirmInput("Do you want to update the filter assigned to this config [y/n] ", reader); y {
 			createFilter(config)
 		}
 	}
@@ -147,7 +146,7 @@ func setTripwire(reader *bufio.Reader, c string) {
 	if err != nil {
 		panic(err)
 	}
-	i, text := waitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
+	i, text := WaitForMessage("In which period do you want to run this action [min/@reboot]: ", reader)
 	if i != 1 {
 		fmt.Println("Abort")
 		return
@@ -220,17 +219,4 @@ func handleConfig(config string) bool {
 		return true
 	}
 	return false
-}
-
-func waitForMessage(question string, reader *bufio.Reader) (int, string) {
-	fmt.Print(question)
-	text, _ := reader.ReadString('\n')
-	text = strings.ReplaceAll(text, "\n", "")
-	if strings.ToLower(text) == "a" {
-		return -1, ""
-	}
-	if len(text) > 0 {
-		return 1, text
-	}
-	return 0, text
 }
