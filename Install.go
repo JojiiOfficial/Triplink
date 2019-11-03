@@ -90,6 +90,7 @@ func setIP(reader *bufio.Reader, config string) {
 		fmt.Println("Abort")
 		return
 	}
+	var sTime string
 	if text != "@reboot" {
 		in, err := strconv.Atoi(text)
 		if err != nil {
@@ -100,21 +101,35 @@ func setIP(reader *bufio.Reader, config string) {
 			fmt.Println("Your range must be between 0 and 60")
 			return
 		}
+		sTime = "every " + text + " minutes"
+		if in <= 1 {
+			sTime = sTime[:len(sTime)-1]
+		}
+	} else {
+		sTime = "after boot"
 	}
+
 	addCMD := sMode
+	var description string
+
 	if opt == "1" {
 		addCMD += " -s"
+		description = sMode + " IPset " + sTime
 	} else if opt == "2" {
 		addCMD += " -t -s=false"
+		description = sMode + " IPtables " + sTime
+
 	} else if opt == "3" {
 		addCMD += " -s -t"
+		description = sMode + " IPset and IPtables " + sTime
+
 	} else {
 		return
 	}
 	if text == "@reboot" {
-		crontabReboot(addCMD, ex)
+		crontabReboot(addCMD, ex, description)
 	} else {
-		crontabPeriodically(text, addCMD, ex)
+		crontabPeriodically(text, addCMD, ex, description)
 	}
 }
 
@@ -123,9 +138,10 @@ func setTripwire(reader *bufio.Reader, c string) {
 	if handleConfig(config) {
 		return
 	}
-	i, opt := WaitForMessage("How should Tripwire act?\n[1] Fetch and block IPs from server based on a filter\n"+
-		"[2] Report IPs and block them using a filter\n"+
-		"[3] Report IPs only without pulling or blocking\n> ", reader)
+	i, opt := WaitForMessage("How should Tripwire act?\n"+
+		"[1] FETCH and block IPs from server based on a filter\t(blocker)\n"+
+		"[2] REPORT IPs ONLY \t\t\t\t\t(reporter)\n"+
+		"[3] REPORT and FETCH IPs to block using a filter\t(reporter and blocker)\n> ", reader)
 
 	if i != 1 {
 		return
@@ -137,7 +153,7 @@ func setTripwire(reader *bufio.Reader, c string) {
 	}
 
 	if opt != "3" {
-		if y, _ := confirmInput("Do you want to update the filter assigned to this config [y/n] ", reader); y {
+		if y, _ := confirmInput("Do you want to update the filter assigned to the selected config (\""+c+"\") [y/n] ", reader); y {
 			createFilter(config)
 		}
 	}
@@ -151,6 +167,7 @@ func setTripwire(reader *bufio.Reader, c string) {
 		fmt.Println("Abort")
 		return
 	}
+	var sTime string
 	if text != "@reboot" {
 		in, err := strconv.Atoi(text)
 		if err != nil {
@@ -161,34 +178,45 @@ func setTripwire(reader *bufio.Reader, c string) {
 			fmt.Println("Your range must be between 0 and 60")
 			return
 		}
+		sTime = "every " + text + " minutes"
+		if in <= 1 {
+			sTime = sTime[:len(sTime)-1]
+		}
+	} else {
+		sTime = "after boot"
 	}
-	addCMD := ""
+
+	var addCMD string
+	var description string
 	if opt == "1" {
 		addCMD = "u" + " -C=\"" + c + "\""
-	} else if opt == "2" {
-		addCMD = "r -u" + " -C=\"" + c + "\""
+		description = "Fetch and block IPs from server " + sTime + " (using \"" + config + "\" as configuration)"
 	} else if opt == "3" {
+		addCMD = "r -u" + " -C=\"" + c + "\""
+		description = "Report IPs using tripwire AND Fetch and block IPs " + sTime + " (using \"" + config + "\" as configuration)"
+	} else if opt == "2" {
 		addCMD = "r" + " -C=\"" + c + "\""
+		description = "Report IPs only (No blocking) " + sTime + " (using \"" + config + "\" as configuration)"
 	} else {
 		return
 	}
 	if text == "@reboot" {
-		crontabReboot(addCMD, ex)
+		crontabReboot(addCMD, ex, description)
 	} else {
-		crontabPeriodically(text, addCMD, ex)
+		crontabPeriodically(text, addCMD, ex, description)
 	}
 }
 
-func crontabReboot(addCMD, file string) {
-	crontab("@reboot " + file + " " + addCMD)
+func crontabReboot(addCMD, file, description string) {
+	crontab("@reboot "+file+" "+addCMD+" > /dev/null", description)
 }
 
-func crontabPeriodically(interval, addCMD, file string) {
-	crontab("*/" + interval + " * * * * " + file + " " + addCMD)
+func crontabPeriodically(interval, addCMD, file, description string) {
+	crontab("*/"+interval+" * * * * "+file+" "+addCMD+" > /dev/null", description)
 }
 
-func crontab(content string) {
-	err := writeCrontab(content)
+func crontab(content, description string) {
+	err := writeCrontab(content, description)
 	if err != nil {
 		fmt.Println("Error writing crontab: " + err.Error())
 	} else {
@@ -202,12 +230,12 @@ func crontab(content string) {
 	}
 }
 
-func writeCrontab(cronCommand string) error {
+func writeCrontab(cronCommand, description string) error {
 	f, err := os.OpenFile("/var/spool/cron/crontabs/root", os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
 	}
-	f.WriteString(cronCommand + "\n")
+	f.WriteString("\n# " + description + "\n" + cronCommand + "\n")
 	f.Close()
 	return nil
 }
@@ -215,7 +243,7 @@ func writeCrontab(cronCommand string) error {
 func handleConfig(config string) bool {
 	_, err := os.Stat(config)
 	if err != nil {
-		fmt.Println("Config not found. Create one with 'twreporter cc'.")
+		fmt.Println("Config not found. Create a config with 'twreporter cc'.")
 		return true
 	}
 	return false
