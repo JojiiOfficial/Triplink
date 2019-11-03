@@ -8,6 +8,7 @@ import (
 )
 
 var help = cli.HelpCommand("display help information")
+var logPrefix = ""
 
 type argT struct {
 	cli.Helper
