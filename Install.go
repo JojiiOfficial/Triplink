@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -230,13 +231,46 @@ func crontab(content, description string) {
 	}
 }
 
+var crontabFile = "/var/spool/cron/crontabs/root"
+
+//checkCrontab returns if crontab has iptables restore command and if $PATH is set
+func checkCrontab() (bool, bool) {
+	dat, err := ioutil.ReadFile(crontabFile)
+	if err != nil {
+		fmt.Println("Error opening crontab file!")
+		return false, false
+	}
+	data := string(dat)
+	return strings.Contains(data, "PATH="), (strings.Contains(data, "iptables-restore") || strings.Contains(data, "restore"))
+
+}
+
 func writeCrontab(cronCommand, description string) error {
-	f, err := os.OpenFile("/var/spool/cron/crontabs/root", os.O_APPEND|os.O_WRONLY, 0600)
+	_, err := os.Stat(crontabFile)
+	if err != nil {
+		f, err := os.Create(crontabFile)
+		if err != nil {
+			fmt.Println("Can't create crontab file: ", crontabFile)
+			return err
+		}
+		f.Close()
+	}
+	f, err := os.OpenFile(crontabFile, os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return err
 	}
-	f.WriteString("\n# " + description + "\n" + cronCommand + "\n")
+	hasPath, _ := checkCrontab()
+
+	addPath := ""
+	if !hasPath {
+		addPath = "\nPATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n"
+	}
+	f.WriteString(addPath + "\n# " + description + "\n" + cronCommand + "\n")
 	f.Close()
+	_, hasRestore := checkCrontab()
+	if !hasRestore {
+		fmt.Println("Note: You need to restore IPtables after boot because they aren't persistant by default!")
+	}
 	return nil
 }
 
