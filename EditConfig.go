@@ -37,7 +37,7 @@ var editConfCMD = &cli.Command{
 			did := false
 			if len(argv.LogFile) > 0 {
 				logFileExists := validateLogFile(argv.LogFile)
-				if logFileExists {
+				if !logFileExists {
 					fmt.Println("Warning!! Logfile doesn't exists!")
 				}
 				realConf.LogFile = argv.LogFile
