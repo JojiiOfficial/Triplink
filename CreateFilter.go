@@ -8,7 +8,7 @@ import (
 )
 
 func createFilter(config string) {
-	fmt.Println("Create a filter. Follow the steps. Keep emty to skip. Enter 'A' to exit.")
+	fmt.Println("Create a filter. Follow the steps. Keep empty to skip. Enter 'A' to exit.")
 	reader := bufio.NewReader(os.Stdin)
 
 	conf := readConfig(config)
