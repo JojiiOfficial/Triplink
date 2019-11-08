@@ -1,13 +1,14 @@
 package main
 
 import (
-	"IPtablesLogParser/iptablesparser"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	iptablesparser "github.com/JojiiOfficial/Iptables-log-parser"
 
 	"github.com/mkideal/cli"
 )
