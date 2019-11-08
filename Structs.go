@@ -60,3 +60,9 @@ type IPPortReport struct {
 	Port  int   `json:"p"`
 	Times []int `json:"t"`
 }
+
+//IPTimePort time wiht port for ipreport
+type IPTimePort struct {
+	Port int
+	Time int
+}

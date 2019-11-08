@@ -1,6 +1,7 @@
 package main
 
 import (
+	"IPtablesLogParser/iptablesparser"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -97,18 +98,14 @@ var reportCMD = &cli.Command{
 			LogInfo("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
 		}
 
-		useLog := false
-
-		//	iptablesparser.ParseFileByLines(config.LogFile, func(entry *iptablesparser.LogEntry) {
-		//fmt.Println(entry)
-		//})
+		useLog := len(argv.CustomIPs) == 0
 
 		reportData := ReportStruct{
 			Token:     config.Token,
 			StartTime: time.Now().Unix(),
 			IPs:       []IPData{},
 		}
-		if len(argv.CustomIPs) > 0 {
+		if !useLog {
 			ipsets := strings.Split(argv.CustomIPs, ";")
 			for _, ipset := range ipsets {
 				ipdat := strings.Split(ipset, ",")
@@ -143,7 +140,55 @@ var reportCMD = &cli.Command{
 
 			reportIPs(*config, reportData, argv.IgnoreCert)
 		} else {
-			fmt.Println("Currently not supportet!")
+			startTime := int64(-1)
+			ipMap := make(map[string][]IPTimePort)
+			err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
+				ip := log.Src
+				if startTime == -1 {
+					startTime = log.Time.Unix()
+				}
+
+				timeDiff := (int)(log.Time.Unix() - startTime)
+				ipTimePortToAdd := IPTimePort{
+					Port: log.DestPort,
+					Time: timeDiff,
+				}
+
+				if _, ok := ipMap[ip]; !ok {
+					ipMap[ip] = []IPTimePort{ipTimePortToAdd}
+				} else {
+					ipMap[ip] = append(ipMap[ip], ipTimePortToAdd)
+				}
+			})
+			if err != nil {
+				LogCritical("Couldn't parse logfile: " + err.Error())
+				return nil
+			}
+			var ipdata []IPData
+			reportData.StartTime = startTime
+			for ip, timesWithPorts := range ipMap {
+				portTimeMap := make(map[int][]int)
+				for _, tp := range timesWithPorts {
+					if _, ok := portTimeMap[tp.Port]; !ok {
+						portTimeMap[tp.Port] = []int{tp.Time}
+					} else {
+						portTimeMap[tp.Port] = append(portTimeMap[tp.Port], tp.Time)
+					}
+				}
+				ipports := []IPPortReport{}
+				for port, times := range portTimeMap {
+					ipports = append(ipports, IPPortReport{
+						Port:  port,
+						Times: times,
+					})
+				}
+				ipdata = append(ipdata, IPData{
+					IP:    ip,
+					Ports: ipports,
+				})
+			}
+			reportData.IPs = ipdata
+			reportIPs(*config, reportData, argv.IgnoreCert)
 		}
 
 		if useLog {
