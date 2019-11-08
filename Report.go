@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	iptablesparser "github.com/JojiiOfficial/Iptables-log-parser"
 	"github.com/mkideal/cli"
 )
 
@@ -20,7 +19,7 @@ type reportT struct {
 	Note             string `cli:"n,note" usage:"Sends a very short description"`
 	DoUpdate         bool   `cli:"u,update" usage:"Specify if the client should update after the report" dft:"false"`
 	UpdateEverything bool   `cli:"a,all" usage:"Specify if the client should update everything if update is set" dft:"false"`
-	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset"`
+	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset separated by semicolon and comma (eg: \"ip,port,count;ip2,port,count\")"`
 	IgnoreCert       bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
 	ConfigName       string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 }
@@ -98,106 +97,53 @@ var reportCMD = &cli.Command{
 			LogInfo("Ignoring -a! --update is not set! If you want to update everything, use -a and -u")
 		}
 
-		ipsToReport := []IPset{}
-		useLog := len(argv.CustomIPs) == 0
-		if !useLog {
-			LogInfo("using arguments")
-			ips := strings.Split(strings.Trim(argv.CustomIPs, " "), ";")
-			for _, ip := range ips {
-				ip = strings.Trim(ip, " ")
-				iptrp := ""
-				reason := 1
-				val := 0
-				if strings.Contains(ip, ",") {
-					dat := strings.Split(ip, ",")
-					dat[0] = strings.Trim(dat[0], " ")
-					iReason, err := strconv.Atoi(strings.Trim(dat[1], " "))
-					if err == nil {
-						reason = iReason
-					}
-					if len(dat) == 3 {
-						ival, err := strconv.Atoi(strings.Trim(dat[2], " "))
-						if err == nil {
-							val = ival
-						}
-					}
-					iptrp = strings.Trim(dat[0], " ")
-				} else {
-					iptrp = ip
-				}
-				ipsToCheck := []string{}
-				if strings.Contains(iptrp, "/") {
-					cidr, err := strconv.Atoi(strings.Split(iptrp, "/")[1])
-					if err != nil {
-						LogError("CIDR is no int! Skipping " + iptrp)
-						continue
-					}
-					if cidr < 20 {
-						LogError("You really want to report more than 256 IPs? I don't think so")
-						continue
-					}
-					iplist, err := cidrToIPlist(iptrp)
-					if err != nil {
-						LogError("Error parsing CIDR:" + err.Error())
-						LogInfo("Skipping CIDR range!")
-						continue
-					}
-					for _, cip := range iplist {
-						ipsToCheck = append(ipsToCheck, cip)
-					}
-				} else {
-					ipsToCheck = append(ipsToCheck, iptrp)
-				}
-				for _, icp := range ipsToCheck {
-					valid, nvReason := isIPValid(icp)
-					if valid {
-						ipsToReport = append(ipsToReport, IPset{IP: icp, Reason: reason, Valid: val})
-					} else {
-						LogError("Ip is not valid: " + icp + " " + ipErrToString(nvReason) + " skipping")
-					}
-				}
-			}
-		} else {
-			LogInfo("using log: " + config.LogFile)
-			ipTime := make(map[string]([]time.Time))
-			err := iptablesparser.ParseFileByLines(config.LogFile, func(log *iptablesparser.LogEntry) {
-				_, has := ipTime[log.Src]
-				if has {
-					ipTime[log.Src] = append(ipTime[log.Src], log.Time)
-				} else {
-					ipTime[log.Src] = append([]time.Time{}, log.Time)
-				}
-			})
+		useLog := false
 
-			if err != nil {
-				LogError("Can't read File: " + err.Error())
-			}
-			for ip, t := range ipTime {
-				valid, _ := isIPValid(ip)
-				if !valid {
+		//	iptablesparser.ParseFileByLines(config.LogFile, func(entry *iptablesparser.LogEntry) {
+		//fmt.Println(entry)
+		//})
+
+		reportData := ReportStruct{
+			Token:     config.Token,
+			StartTime: time.Now().Unix(),
+			IPs:       []IPData{},
+		}
+		if len(argv.CustomIPs) > 0 {
+			ipsets := strings.Split(argv.CustomIPs, ";")
+			for _, ipset := range ipsets {
+				ipdat := strings.Split(ipset, ",")
+				if len(ipdat) < 2 || len(ipdat) > 3 {
+					LogInfo("Port missing for IP \"" + ipset + "\"! Skipping")
 					continue
 				}
-				reason := IPrequestTimesToReason(t)
-				ipsToReport = append(ipsToReport, IPset{ip, reason, 0})
+				ip := ipdat[0]
+				port, err := strconv.Atoi(ipdat[1])
+				if err != nil {
+					LogError("Port (" + ipdat[1] + ") no valid port!")
+					continue
+				}
+				count := 1
+				if len(ipdat) == 3 {
+					count, err = strconv.Atoi(ipdat[2])
+					if err != nil {
+						LogError("Port (" + ipdat[2] + ") no valid count!")
+						continue
+					}
+				}
+				reportData.IPs = append(reportData.IPs, IPData{
+					IP: ip,
+					Ports: []IPPortReport{
+						IPPortReport{
+							Port:  port,
+							Times: fillIntArray(count, 1),
+						},
+					},
+				})
 			}
-		}
 
-		if len(ipsToReport) > 0 {
-			reportStruct := ReportIPStruct{Token: config.Token, Ips: ipsToReport, Note: config.Note}
-			js, err := json.Marshal(reportStruct)
-			if err != nil {
-				panic(err)
-			}
-
-			resp, err := request(config.Host, "report", js, argv.IgnoreCert)
-			if err != nil {
-				LogCritical("error making request: " + err.Error())
-			} else {
-				LogInfo(resp)
-			}
-
+			reportIPs(*config, reportData, argv.IgnoreCert)
 		} else {
-			LogInfo("Nothing to do (reporting)")
+			fmt.Println("Currently not supportet!")
 		}
 
 		if useLog {
@@ -213,80 +159,28 @@ var reportCMD = &cli.Command{
 	},
 }
 
-const maxCountToBrute int = 20
-
-//IPrequestTimesToReason returns a reason based on the frequency of connect attempts
-func IPrequestTimesToReason(timeList []time.Time) int {
-	if len(timeList) == 0 {
-		return -1
-	} else if len(timeList) <= 2 {
-		//return Scanner
-		return 1
+func fillIntArray(size, value int) []int {
+	arr := make([]int, size)
+	for i := 0; i < size; i++ {
+		arr[i] = value
 	}
-
-	bruteToleranceLine := (int)(len(timeList) / 9)
-
-	lastPing := timeList[0]
-	spamCounter := 0
-	scanCounter := 0
-	bruteRow := 0
-	bruteTolerance := 0
-	for _, t := range timeList {
-		diff := t.Sub(lastPing).Minutes()
-		if diff < 1 {
-			bruteRow++
-		} else if diff <= 10 {
-			spamCounter++
-			if bruteRow < maxCountToBrute {
-				if bruteTolerance > bruteToleranceLine {
-					bruteRow = 0
-				} else {
-					bruteTolerance++
-				}
-			} else {
-				return 3
-			}
-		} else {
-			scanCounter++
-			if bruteRow < maxCountToBrute {
-				if bruteTolerance > bruteToleranceLine {
-					bruteRow = 0
-				} else {
-					bruteTolerance++
-				}
-			}
-		}
-		lastPing = t
-	}
-
-	if bruteRow >= 14 {
-		return 3
-	}
-
-	if spamCounter >= 7 {
-		return 2
-	}
-
-	a, b := percentRelation(scanCounter, spamCounter)
-	if a > (b*1.85) && scanCounter < 15 {
-		return 1
-	}
-	return 2
+	return arr
 }
 
-func percentRelation(a, b int) (float32, float32) {
-	ges := a + b
-	if a+b == 0 {
-		return 0, 0
+func reportIPs(config Config, reportData ReportStruct, ignorecert bool) {
+	if len(reportData.IPs) == 0 {
+		LogInfo("Nothing to do")
+		return
 	}
-	return (float32)(a * 100 / ges), (float32)(b * 100 / ges)
-}
-
-func avgTimeDiff(timeList []time.Time) float32 {
-	deltaTime := float32(0)
-	lastPing := timeList[0]
-	for _, t := range timeList {
-		deltaTime += float32(t.Sub(lastPing).Minutes())
+	jsondata, err := json.Marshal(reportData)
+	if err != nil {
+		LogCritical("Error creating json:" + err.Error())
+		return
 	}
-	return ((float32)(deltaTime) / float32(len(timeList)))
+	res, err := request(config.Host, "reportnew", jsondata, ignorecert)
+	if err != nil {
+		LogCritical("Error doing rest call: " + err.Error())
+		return
+	}
+	LogInfo("Server response: " + res)
 }
