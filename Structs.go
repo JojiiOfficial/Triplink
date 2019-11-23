@@ -66,3 +66,24 @@ type IPTimePort struct {
 	Port int
 	Time int
 }
+
+//IPInfoRequest request for ipinfo
+type IPInfoRequest struct {
+	Token string   `json:"t"`
+	IPs   []string `json:"ips"`
+}
+
+//IPInfoData data for IPInfo
+type IPInfoData struct {
+	IP      string       `json:"ip"`
+	Reports []ReportData `json:"reports"`
+}
+
+//ReportData data for a report
+type ReportData struct {
+	ReporterID   int    `json:"repid"`
+	ReporterName string `json:"repnm"`
+	Time         int64  `json:"tm"`
+	Port         int    `json:"prt"`
+	Count        int    `json:"ct"`
+}

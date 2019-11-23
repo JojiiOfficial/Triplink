@@ -37,6 +37,7 @@ func main() {
 		cli.Tree(restoreCMD),
 		cli.Tree(delBackupCMD),
 		cli.Tree(editConfCMD),
+		cli.Tree(ipinfoCMD),
 	).Run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
