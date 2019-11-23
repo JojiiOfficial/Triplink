@@ -13,13 +13,14 @@ import (
 
 type ipinfoT struct {
 	cli.Helper
-	IPs        []string `cli:"*i,ips" usage:"Show info for these IPs"`
-	ConfigName string   `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
-	LogFile    string   `cli:"f,file" usage:"Specify the file to read the logs from"`
-	Host       string   `cli:"r,host" usage:"Specify the host to send the data to"`
-	Token      string   `cli:"t,token" usage:"Specify the token required by uploading hosts"`
-	Note       string   `cli:"n,note" usage:"Sends a very short description"`
-	IgnoreCert bool     `cli:"ignorecert" usage:"Ignore invalid certs" dft:"false"`
+	IPs               []string `cli:"*i,ips" usage:"Show info for these IPs"`
+	ConfigName        string   `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	LogFile           string   `cli:"f,file" usage:"Specify the file to read the logs from"`
+	Host              string   `cli:"r,host" usage:"Specify the host to send the data to"`
+	Token             string   `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	Note              string   `cli:"n,note" usage:"Sends a very short description"`
+	HideNoReportFound bool     `cli:"H,hide" usage:"Hide the message for an IP without reports"`
+	IgnoreCert        bool     `cli:"ignorecert" usage:"Ignore invalid certs" dft:"false"`
 }
 
 var ipinfoCMD = &cli.Command{
@@ -120,23 +121,28 @@ var ipinfoCMD = &cli.Command{
 			return errors.New("Error parsing response: " + err.Error())
 		}
 
-		displayIPdata(&ipdata)
+		displayIPdata(&ipdata, argv.HideNoReportFound)
 
 		return nil
 	},
 }
 
-func displayIPdata(ipdata *[]IPInfoData) {
-	for i, info := range *ipdata {
+func displayIPdata(ipdata *[]IPInfoData, hideNotFound bool) {
+	for _, info := range *ipdata {
 		if len(info.Reports) > 0 {
-			fmt.Println("IP: " + info.IP)
-			fmt.Println("Reports:")
+			var max int
+			for _, ce := range info.Reports {
+				max += ce.Count
+			}
+			fmt.Println("IP: " + info.IP + " (" + strconv.Itoa(max) + "x)")
 			for _, report := range info.Reports {
 				fmt.Println("  ", parseTime(report.Time), report.ReporterName, ":"+strconv.Itoa(report.Port), "("+strconv.Itoa(report.Count)+"x)")
 			}
-			if i+2 < len(*ipdata) {
-				fmt.Println()
-			}
+		} else if !hideNotFound {
+			fmt.Println("No report for " + info.IP)
+		}
+		if (len(info.Reports) > 0 && hideNotFound) || !hideNotFound {
+			fmt.Println()
 		}
 	}
 }
