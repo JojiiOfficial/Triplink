@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mkideal/cli"
 )
@@ -125,7 +127,22 @@ var ipinfoCMD = &cli.Command{
 }
 
 func displayIPdata(ipdata *[]IPInfoData) {
-	fmt.Println(*ipdata)
+	for i, info := range *ipdata {
+		if len(info.Reports) > 0 {
+			fmt.Println("IP: " + info.IP)
+			fmt.Println("Reports:")
+			for _, report := range info.Reports {
+				fmt.Println("  ", parseTime(report.Time), report.ReporterName, ":"+strconv.Itoa(report.Port), "("+strconv.Itoa(report.Count)+"x)")
+			}
+			if i+2 < len(*ipdata) {
+				fmt.Println()
+			}
+		}
+	}
+}
+
+func parseTime(unix int64) string {
+	return time.Unix(unix, 0).Format(time.Stamp)
 }
 
 //InitArrayParam split parameter values
