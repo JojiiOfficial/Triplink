@@ -128,7 +128,7 @@ var ipinfoCMD = &cli.Command{
 }
 
 func displayIPdata(ipdata *[]IPInfoData, hideNotFound bool) {
-	for _, info := range *ipdata {
+	for i, info := range *ipdata {
 		if len(info.Reports) > 0 {
 			var max int
 			for _, ce := range info.Reports {
@@ -141,7 +141,7 @@ func displayIPdata(ipdata *[]IPInfoData, hideNotFound bool) {
 		} else if !hideNotFound {
 			fmt.Println("No report for " + info.IP)
 		}
-		if (len(info.Reports) > 0 && hideNotFound) || !hideNotFound {
+		if i+1 < len(*ipdata) && (!hideNotFound || (hideNotFound && len(info.Reports) > 0)) {
 			fmt.Println()
 		}
 	}
