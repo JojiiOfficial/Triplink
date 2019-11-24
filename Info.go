@@ -129,20 +129,21 @@ var ipinfoCMD = &cli.Command{
 
 func displayIPdata(ipdata *[]IPInfoData, hideNotFound bool) {
 	for i, info := range *ipdata {
+		var add string
+		if i > 0 {
+			add = "\n"
+		}
 		if len(info.Reports) > 0 {
 			var max int
 			for _, ce := range info.Reports {
 				max += ce.Count
 			}
-			fmt.Println("IP: " + info.IP + " (" + strconv.Itoa(max) + "x)")
+			fmt.Println(add + "IP: " + info.IP + " (" + strconv.Itoa(max) + "x)")
 			for _, report := range info.Reports {
 				fmt.Println("  ", parseTime(report.Time), report.ReporterName, ":"+strconv.Itoa(report.Port), "("+strconv.Itoa(report.Count)+"x)")
 			}
 		} else if !hideNotFound {
-			fmt.Println("No report for " + info.IP)
-		}
-		if i+1 < len(*ipdata) && (!hideNotFound || (hideNotFound && len(info.Reports) > 0)) {
-			fmt.Println()
+			fmt.Println(add + "No report for " + info.IP)
 		}
 	}
 }
