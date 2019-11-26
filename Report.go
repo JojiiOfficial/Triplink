@@ -86,6 +86,7 @@ var reportCMD = &cli.Command{
 				LogFile: logFile,
 				Token:   token,
 				Note:    note,
+				Filter:  fileConfig.Filter,
 			}
 		}
 
