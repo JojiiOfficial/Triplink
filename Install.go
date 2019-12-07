@@ -128,9 +128,9 @@ func setIP(reader *bufio.Reader, config string) {
 		return
 	}
 	if text == "@reboot" {
-		crontabReboot(addCMD, ex, description)
+		crontabReboot(addCMD, ex, description, false)
 	} else {
-		crontabPeriodically(text, addCMD, ex, description)
+		crontabPeriodically(text, addCMD, ex, description, false)
 	}
 }
 
@@ -189,6 +189,7 @@ func setTripwire(reader *bufio.Reader, c string) {
 
 	var addCMD string
 	var description string
+	showiptablesinfo := true
 	if opt == "1" {
 		addCMD = "u" + " -C=\"" + c + "\""
 		description = "Fetch and block IPs from server " + sTime + " (using \"" + config + "\" as configuration)"
@@ -198,26 +199,27 @@ func setTripwire(reader *bufio.Reader, c string) {
 	} else if opt == "2" {
 		addCMD = "r" + " -C=\"" + c + "\""
 		description = "Report IPs only (No blocking) " + sTime + " (using \"" + config + "\" as configuration)"
+		showiptablesinfo = false
 	} else {
 		return
 	}
 	if text == "@reboot" {
-		crontabReboot(addCMD, ex, description)
+		crontabReboot(addCMD, ex, description, showiptablesinfo)
 	} else {
-		crontabPeriodically(text, addCMD, ex, description)
+		crontabPeriodically(text, addCMD, ex, description, showiptablesinfo)
 	}
 }
 
-func crontabReboot(addCMD, file, description string) {
-	crontab("@reboot "+file+" "+addCMD+" > /dev/null", description)
+func crontabReboot(addCMD, file, description string, showiptablesinfo bool) {
+	crontab("@reboot "+file+" "+addCMD+" > /dev/null", description, showiptablesinfo)
 }
 
-func crontabPeriodically(interval, addCMD, file, description string) {
-	crontab("*/"+interval+" * * * * "+file+" "+addCMD+" > /dev/null", description)
+func crontabPeriodically(interval, addCMD, file, description string, showiptablesinfo bool) {
+	crontab("*/"+interval+" * * * * "+file+" "+addCMD+" > /dev/null", description, showiptablesinfo)
 }
 
-func crontab(content, description string) {
-	err := writeCrontab(content, description)
+func crontab(content, description string, showiptablesinfo bool) {
+	err := writeCrontab(content, description, showiptablesinfo)
 	if err != nil {
 		fmt.Println("Error writing crontab: " + err.Error())
 	} else {
@@ -245,7 +247,7 @@ func checkCrontab() (bool, bool) {
 
 }
 
-func writeCrontab(cronCommand, description string) error {
+func writeCrontab(cronCommand, description string, showiptablesinfo bool) error {
 	_, err := os.Stat(crontabFile)
 	if err != nil {
 		f, err := os.Create(crontabFile)
@@ -268,7 +270,7 @@ func writeCrontab(cronCommand, description string) error {
 	f.WriteString(addPath + "\n# " + description + "\n" + cronCommand + "\n")
 	f.Close()
 	_, hasRestore := checkCrontab()
-	if !hasRestore {
+	if !hasRestore && showiptablesinfo {
 		fmt.Println("Note: You need to restore IPtables after boot because they aren't persistant by default!")
 	}
 	return nil
