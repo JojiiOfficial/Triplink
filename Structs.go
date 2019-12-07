@@ -87,3 +87,9 @@ type ReportData struct {
 	Port         int    `json:"prt"`
 	Count        int    `json:"ct"`
 }
+
+//Status a REST response status
+type Status struct {
+	StatusCode    string `json:"statusCode"`
+	StatusMessage string `json:"statusMessage"`
+}

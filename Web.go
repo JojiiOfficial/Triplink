@@ -3,6 +3,9 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -28,5 +31,28 @@ func request(url, file string, data []byte, ignoreCert bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	isError, code, message := checkResponseErrors(d)
+	if isError {
+		if code == "error" {
+			LogError(message)
+		} else {
+			fmt.Println("Got " + code + ": " + message)
+		}
+		return string(d), errors.New("Response error")
+	}
 	return string(d), nil
+}
+
+func checkResponseErrors(response []byte) (isError bool, statuscode, errorMsg string) {
+	var obj Status
+	err := json.Unmarshal(response, &obj)
+	if err != nil {
+		return
+	}
+	if len(obj.StatusCode) > 0 && len(obj.StatusMessage) > 0 {
+		isError = true
+		statuscode = obj.StatusCode
+		errorMsg = obj.StatusMessage
+	}
+	return
 }
