@@ -15,7 +15,7 @@ type deleteConfT struct {
 var deleteConfCMD = &cli.Command{
 	Name:    "deleteConfig",
 	Aliases: []string{"delconf", "deleteconfig", "dc", "dconf", "delc"},
-	Desc:    "Delete configuration file",
+	Desc:    "Delete a configuration file",
 	Argv:    func() interface{} { return new(deleteConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*deleteConfT)

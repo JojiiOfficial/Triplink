@@ -22,7 +22,7 @@ type updateConfT struct {
 var updateCMD = &cli.Command{
 	Name:    "update",
 	Aliases: []string{"u", "upd", "update"},
-	Desc:    "updates the ipset",
+	Desc:    "Download and apply IP filter",
 	Argv:    func() interface{} { return new(updateConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*updateConfT)

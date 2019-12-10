@@ -19,7 +19,7 @@ type editConfT struct {
 var editConfCMD = &cli.Command{
 	Name:    "editConfig",
 	Aliases: []string{"econf", "editconfig", "ec", "editc", "edconf"},
-	Desc:    "Edit configuration file",
+	Desc:    "Edit a configuration file",
 	Argv:    func() interface{} { return new(editConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*editConfT)

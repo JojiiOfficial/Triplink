@@ -114,3 +114,13 @@ func createAndValidateConfigFile(confName string) (int, string) {
 
 	return 1, confFile
 }
+
+func getHome() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println("Couldn't retrieve homeDir!")
+		os.Exit(1)
+		return ""
+	}
+	return homeDir
+}

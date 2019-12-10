@@ -15,19 +15,14 @@ type viewConfT struct {
 var viewConfCMD = &cli.Command{
 	Name:    "viewConfig",
 	Aliases: []string{"vconf", "vc", "viewc", "showconf", "showconfig", "config", "conf", "confshow", "confview"},
-	Desc:    "View configuration file",
+	Desc:    "View a configuration file",
 	Argv:    func() interface{} { return new(viewConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*viewConfT)
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			fmt.Println("Couldn't retrieve homeDir!")
-			return nil
-		}
 
-		confFile := getConfFile(getConfPath(homeDir), argv.ConfigName)
+		confFile := getConfFile(getConfPath(getHome()), argv.ConfigName)
 		fmt.Println(confFile)
-		_, err = os.Stat(confFile)
+		_, err := os.Stat(confFile)
 		if err != nil {
 			fmt.Println("No config found. Nothing to do.")
 			return nil

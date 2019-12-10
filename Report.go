@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -32,10 +31,7 @@ var reportCMD = &cli.Command{
 	Argv:    func() interface{} { return new(reportT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*reportT)
-		if os.Getuid() != 0 {
-			fmt.Println("You need to be root!")
-			return nil
-		}
+
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		var config *Config
 		if logStatus < 0 {
@@ -44,11 +40,6 @@ var reportCMD = &cli.Command{
 			fmt.Println("Config empty. Using parameter as config. You can change them with <config>. Try 'triplink help config' for more information.")
 			if len(argv.Host) == 0 || len(argv.LogFile) == 0 || len(argv.Token) == 0 {
 				fmt.Println("There is no such config file! You have to set all arguments. Try 'triplink help report'")
-				return nil
-			}
-			logFileExists := validateLogFile(argv.LogFile)
-			if !logFileExists {
-				LogError("Logfile doesn't exists")
 				return nil
 			}
 			config = &Config{
@@ -63,11 +54,6 @@ var reportCMD = &cli.Command{
 			token := fileConfig.Token
 			if len(argv.LogFile) > 0 {
 				logFile = argv.LogFile
-			}
-			logFileExists := validateLogFile(logFile)
-			if !logFileExists {
-				LogError("Logfile doesn't exists")
-				return nil
 			}
 			if len(argv.Host) > 0 {
 				host = argv.Host
@@ -84,8 +70,8 @@ var reportCMD = &cli.Command{
 		}
 
 		logFileExists := validateLogFile(config.LogFile)
-		if !logFileExists {
-			LogError("Logfile doesn't exists")
+		if !logFileExists && len(argv.CustomIPs) == 0 {
+			LogError("The value for \"logfile\" is missing in the config file!")
 			return nil
 		}
 

@@ -28,6 +28,7 @@ var installCMD = &cli.Command{
 		}
 		argv := ctx.Argv().(*installT)
 		reader := bufio.NewReader(os.Stdin)
+
 		i, text := WaitForMessage("What kind of system do you want to setup?\n[t] Tripwire\n[i] iptables/set\n> ", reader)
 		if i == -1 {
 			return nil
@@ -46,14 +47,6 @@ var installCMD = &cli.Command{
 			return nil
 		}
 
-		//Tripwire related options
-		//1. Update iplist (only blocking) periodically
-		//2. Reporting + blocking periodically
-		//3. Only reporting
-
-		//firewall related options
-		//1. Backup iptables & ipset
-		//2. Restore iptables & ipset
 		return nil
 	},
 }

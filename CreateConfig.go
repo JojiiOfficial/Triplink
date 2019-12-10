@@ -18,7 +18,7 @@ type newConfT struct {
 var createConfCMD = &cli.Command{
 	Name:    "createConfig",
 	Aliases: []string{"cc", "cconf", "createconf", "createconfig"},
-	Desc:    "Create new configuration file",
+	Desc:    "Create a new configuration file",
 	Argv:    func() interface{} { return new(newConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*newConfT)
