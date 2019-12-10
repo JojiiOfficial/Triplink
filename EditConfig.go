@@ -12,7 +12,6 @@ type editConfT struct {
 	Host       string `cli:"r,host" usage:"Specify the host to send the data to"`
 	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
-	SetFilter  bool   `cli:"F,filter" usage:"Specify to set the filter after creating the config" dft:"false"`
 	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from. Use \"rem\" or \"remove\" to make it empty"`
 }
 
@@ -61,11 +60,7 @@ var editConfCMD = &cli.Command{
 				did = true
 			}
 			if !did {
-				if argv.SetFilter {
-					createFilter(confFile)
-				} else {
-					fmt.Println("Nothing to do!")
-				}
+				fmt.Println("Nothing to do!")
 				return nil
 			}
 			err := realConf.save(confFile)

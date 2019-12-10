@@ -40,11 +40,7 @@ var ipinfoCMD = &cli.Command{
 				fmt.Println("There is no such config file! You have to set all arguments. Try 'triplink help report'")
 				return nil
 			}
-			logFileExists := validateLogFile(argv.LogFile)
-			if !logFileExists {
-				LogError("Logfile doesn't exists")
-				return nil
-			}
+
 			config = &Config{
 				Host:    argv.Host,
 				LogFile: argv.LogFile,
@@ -58,11 +54,7 @@ var ipinfoCMD = &cli.Command{
 			if len(argv.LogFile) > 0 {
 				logFile = argv.LogFile
 			}
-			logFileExists := validateLogFile(logFile)
-			if !logFileExists {
-				LogError("Logfile doesn't exists")
-				return nil
-			}
+
 			if len(argv.Host) > 0 {
 				host = argv.Host
 			}
@@ -74,6 +66,12 @@ var ipinfoCMD = &cli.Command{
 				LogFile: logFile,
 				Token:   token,
 			}
+		}
+
+		logFileExists := validateLogFile(config.LogFile)
+		if !logFileExists && len(config.LogFile) > 0 {
+			LogError("Logfile doesn't exists")
+			return nil
 		}
 
 		InitArrayParam(&argv.IPs, ",")

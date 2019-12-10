@@ -146,12 +146,6 @@ func setTripwire(reader *bufio.Reader, c string) {
 		return
 	}
 
-	if opt != "2" {
-		if y, _ := confirmInput("Do you want to update the filter assigned to the selected config (\""+c+"\") [y/n] ", reader); y {
-			createFilter(config)
-		}
-	}
-
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)

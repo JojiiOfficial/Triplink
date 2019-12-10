@@ -18,7 +18,6 @@ type argT struct {
 var root = &cli.Command{
 	Argv: func() interface{} { return new(argT) },
 	Fn: func(ctx *cli.Context) error {
-		//fmt.Println("Usage: triplink <install/report/update/(view/create/delete)config/backup/restore> [-f,-r,-t,-o,-u,-a]")
 		fmt.Println("Commands:\n\n" +
 			"help           display help information\n" +
 			"createConfig   Create a new configuration file (aliases cc,cconf,createconf,createconfig)\n" +

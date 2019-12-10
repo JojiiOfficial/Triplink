@@ -31,16 +31,23 @@ func request(url, file string, data []byte, ignoreCert bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	isError, code, message := checkResponseErrors(d)
+
+	response := strings.Trim(strings.ReplaceAll(string(d), "\n", ""), " ")
+
+	isError, code, message := checkResponseErrors([]byte(response))
 	if isError {
 		if code == "error" {
 			LogError(message)
 		} else {
 			fmt.Println("Got " + code + ": " + message)
 		}
-		return string(d), errors.New("Response error")
+		return response, errors.New("Response error")
 	}
-	return string(d), nil
+	if !strings.HasSuffix(response, "}") && !strings.HasPrefix(response, "{") && !strings.HasSuffix(response, "]") && !strings.HasPrefix(response, "]") {
+		fmt.Println(response)
+		return response, errors.New("no json was returned")
+	}
+	return response, nil
 }
 
 func checkResponseErrors(response []byte) (isError bool, statuscode, errorMsg string) {
