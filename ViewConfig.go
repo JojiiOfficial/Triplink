@@ -37,25 +37,14 @@ var viewConfCMD = &cli.Command{
 
 		fmt.Println("-------- Configuration --------")
 		fmt.Println("Host:\t\t", conf.Host)
-		fmt.Println("LogFile:\t", conf.LogFile)
 		fmt.Println("Token:\t\t", conf.Token)
-		fmt.Println("Note:\t\t", "\""+conf.Note+"\"")
-		fmt.Println("Filter: ")
-		filter := conf.Filter
-		fmt.Println("  min-Reason: \t", filter.MinReason, "1 = scanner, 2 spammer, 3 = bruteforcer")
-		pa := "no"
-		if filter.ProxyAllowed == 0 {
-			pa = "yes"
+
+		var logadd string
+		if len(conf.LogFile) > 0 {
+			fmt.Println("LogFile:\t", conf.LogFile)
+			logadd = "-f " + conf.LogFile
 		}
-		fmt.Println("  Proxies allow:", pa)
-		fmt.Println("  min-Reports: \t", filter.MinReports)
-		fmt.Println("  maxIPs: \t", filter.MaxIPs)
-		ov := "yes"
-		if filter.OnlyValidatedIPs == 0 {
-			ov = "no"
-		}
-		fmt.Println("  only valid:\t", ov)
-		fmt.Println("\ntwreporter cc -t "+conf.Token, "-r", conf.Host, "-f", conf.LogFile, "-n", "\""+conf.Note+"\"")
+		fmt.Println("\nRecreate this config:\ntriplink cc -t "+conf.Token, "-r", conf.Host, logadd)
 
 		return nil
 	},

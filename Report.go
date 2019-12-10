@@ -18,7 +18,6 @@ type reportT struct {
 	LogFile          string `cli:"f,file" usage:"Specify the file to read the logs from"`
 	Host             string `cli:"r,host" usage:"Specify the host to send the data to"`
 	Token            string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
-	Note             string `cli:"n,note" usage:"Sends a very short description"`
 	DoUpdate         bool   `cli:"u,update" usage:"Specify if the client should update after the report" dft:"false"`
 	UpdateEverything bool   `cli:"a,all" usage:"Specify if the client should update everything if update is set" dft:"false"`
 	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset separated by semicolon and comma (eg: \"ip,port,count;ip2,port,count\")"`
@@ -56,14 +55,12 @@ var reportCMD = &cli.Command{
 				Host:    argv.Host,
 				LogFile: argv.LogFile,
 				Token:   argv.Token,
-				Note:    argv.Note,
 			}
 		} else {
 			fileConfig := readConfig(configFile)
 			logFile := fileConfig.LogFile
 			host := fileConfig.Host
 			token := fileConfig.Token
-			note := fileConfig.Note
 			if len(argv.LogFile) > 0 {
 				logFile = argv.LogFile
 			}
@@ -78,14 +75,10 @@ var reportCMD = &cli.Command{
 			if len(argv.Token) > 0 {
 				token = argv.Token
 			}
-			if len(argv.Note) > 0 {
-				note = argv.Note
-			}
 			config = &Config{
 				Host:    host,
 				LogFile: logFile,
 				Token:   token,
-				Note:    note,
 				Filter:  fileConfig.Filter,
 			}
 		}

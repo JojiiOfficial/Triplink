@@ -16,7 +16,6 @@ type Config struct {
 	LogFile       string      `json:"logfile"`
 	Token         string      `json:"token"`
 	Filter        FetchFilter `json:"fetchFilter"`
-	Note          string      `json:"note"`
 	ShowTimeInLog bool        `json:"showLogTime"`
 }
 

@@ -18,7 +18,6 @@ type ipinfoT struct {
 	LogFile           string   `cli:"f,file" usage:"Specify the file to read the logs from"`
 	Host              string   `cli:"r,host" usage:"Specify the host to send the data to"`
 	Token             string   `cli:"t,token" usage:"Specify the token required by uploading hosts"`
-	Note              string   `cli:"n,note" usage:"Sends a very short description"`
 	HideNoReportFound bool     `cli:"H,hide" usage:"Hide the message for an IP without reports"`
 	IgnoreCert        bool     `cli:"ignorecert" usage:"Ignore invalid certs" dft:"false"`
 }
@@ -50,14 +49,12 @@ var ipinfoCMD = &cli.Command{
 				Host:    argv.Host,
 				LogFile: argv.LogFile,
 				Token:   argv.Token,
-				Note:    argv.Note,
 			}
 		} else {
 			fileConfig := readConfig(configFile)
 			logFile := fileConfig.LogFile
 			host := fileConfig.Host
 			token := fileConfig.Token
-			note := fileConfig.Note
 			if len(argv.LogFile) > 0 {
 				logFile = argv.LogFile
 			}
@@ -72,14 +69,10 @@ var ipinfoCMD = &cli.Command{
 			if len(argv.Token) > 0 {
 				token = argv.Token
 			}
-			if len(argv.Note) > 0 {
-				note = argv.Note
-			}
 			config = &Config{
 				Host:    host,
 				LogFile: logFile,
 				Token:   token,
-				Note:    note,
 			}
 		}
 
