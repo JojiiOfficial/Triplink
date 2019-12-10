@@ -19,7 +19,7 @@ var root = &cli.Command{
 	Desc: "this is root command",
 	Argv: func() interface{} { return new(argT) },
 	Fn: func(ctx *cli.Context) error {
-		fmt.Println("Usage: twreporter <install/report/update/(view/create/delete)config/backup/restore> [-f,-r,-t,-o,-u,-a]")
+		fmt.Println("Usage: triplink <install/report/update/(view/create/delete)config/backup/restore> [-f,-r,-t,-o,-u,-a]")
 		return nil
 	},
 }
