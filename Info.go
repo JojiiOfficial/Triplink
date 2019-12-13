@@ -96,7 +96,7 @@ var ipinfoCMD = &cli.Command{
 		if err != nil {
 			return errors.New("Couldn't create json")
 		}
-		res, err := request(config.Host, "ipinfo", d, argv.IgnoreCert)
+		res, _, err := request(config.Host, "ipinfo", d, argv.IgnoreCert)
 		if err != nil {
 			return errors.New("Error doing rest call: " + err.Error())
 		}

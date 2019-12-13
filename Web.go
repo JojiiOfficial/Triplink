@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func request(url, file string, data []byte, ignoreCert bool) (string, error) {
+func request(url, file string, data []byte, ignoreCert bool) (string, bool, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: ignoreCert},
 	}
@@ -24,42 +24,53 @@ func request(url, file string, data []byte, ignoreCert bool) (string, error) {
 	}
 	resp, err := client.Post(addFile, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	d, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	response := strings.Trim(strings.ReplaceAll(string(d), "\n", ""), " ")
 
-	isError, code, message := checkResponseErrors([]byte(response))
+	isError, isStatus, code, message := checkResponseErrors([]byte(response))
 	if isError {
 		if code == "error" {
 			LogError(message)
 		} else {
 			fmt.Println("Got " + code + ": " + message)
 		}
-		return response, errors.New("Response error")
+		return response, isStatus, errors.New("Response error")
 	}
 	if !strings.HasSuffix(response, "}") && !strings.HasPrefix(response, "{") && !strings.HasSuffix(response, "]") && !strings.HasPrefix(response, "]") {
 		fmt.Println(response)
-		return response, errors.New("no json was returned")
+		return response, false, errors.New("no json was returned")
 	}
-	return response, nil
+	return response, isStatus, nil
 }
 
-func checkResponseErrors(response []byte) (isError bool, statuscode, errorMsg string) {
-	var obj Status
-	err := json.Unmarshal(response, &obj)
+func checkResponseErrors(response []byte) (isError, isStatus bool, statuscode, errorMsg string) {
+	status, err := responseToStatus(string(response))
 	if err != nil {
 		return
 	}
-	if len(obj.StatusCode) > 0 && len(obj.StatusMessage) > 0 {
-		isError = true
-		statuscode = obj.StatusCode
-		errorMsg = obj.StatusMessage
+	if len(status.StatusCode) > 0 && len(status.StatusMessage) > 0 {
+		isStatus = true
+		if status.StatusCode != "success" {
+			isError = true
+			statuscode = status.StatusCode
+			errorMsg = status.StatusMessage
+		}
 	}
 	return
+}
+
+func responseToStatus(resp string) (*Status, error) {
+	var obj Status
+	err := json.Unmarshal([]byte(resp), &obj)
+	if err != nil {
+		return nil, err
+	}
+	return &obj, nil
 }
