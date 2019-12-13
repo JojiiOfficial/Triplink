@@ -86,6 +86,9 @@ var reportCMD = &cli.Command{
 			StartTime: time.Now().Unix(),
 			IPs:       []IPData{},
 		}
+
+		responseSuccess := false
+
 		if !useLog {
 			ipsets := strings.Split(argv.CustomIPs, ";")
 			for _, ipset := range ipsets {
@@ -119,7 +122,7 @@ var reportCMD = &cli.Command{
 				})
 			}
 
-			reportIPs(*config, reportData, argv.IgnoreCert)
+			responseSuccess = reportIPs(*config, reportData, argv.IgnoreCert)
 		} else {
 			startTime := int64(-1)
 			ipMap := make(map[string][]IPTimePort)
@@ -169,12 +172,15 @@ var reportCMD = &cli.Command{
 				})
 			}
 			reportData.IPs = ipdata
-			reportIPs(*config, reportData, argv.IgnoreCert)
+			responseSuccess = reportIPs(*config, reportData, argv.IgnoreCert)
 		}
 
-		if useLog {
+		if useLog && responseSuccess {
 			runCommand(nil, "cat "+config.LogFile+" >> "+config.LogFile+"_1")
 			runCommand(nil, "echo -n > "+config.LogFile)
+		} else if !responseSuccess && useLog {
+			LogInfo("Keeping logs until report was successful")
+			return nil
 		}
 
 		if argv.DoUpdate {
@@ -193,25 +199,26 @@ func fillIntArray(size, value int) []int {
 	return arr
 }
 
-func reportIPs(config Config, reportData ReportStruct, ignorecert bool) {
+func reportIPs(config Config, reportData ReportStruct, ignorecert bool) bool {
 	if len(reportData.IPs) == 0 {
 		LogInfo("Nothing to do")
-		return
+		return true
 	}
 	jsondata, err := json.Marshal(reportData)
 	if err != nil {
 		LogCritical("Error creating json:" + err.Error())
-		return
+		return false
 	}
 	res, isStatus, err := request(config.Host, "reportnew", jsondata, ignorecert)
 	if err != nil {
 		LogCritical("Error doing rest call: " + err.Error())
-		return
+		return false
 	}
 	if isStatus {
 		status, _ := responseToStatus(res)
 		LogInfo("Server response: " + status.StatusMessage)
-	} else {
-		LogError("Got weird server response: " + res)
+		return (status.StatusMessage == "success")
 	}
+	LogError("Got weird server response: " + res)
+	return false
 }

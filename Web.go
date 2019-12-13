@@ -33,7 +33,6 @@ func request(url, file string, data []byte, ignoreCert bool) (string, bool, erro
 	}
 
 	response := strings.Trim(strings.ReplaceAll(string(d), "\n", ""), " ")
-
 	isError, isStatus, code, message := checkResponseErrors([]byte(response))
 	if isError {
 		if code == "error" {
