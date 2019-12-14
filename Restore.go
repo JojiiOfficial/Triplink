@@ -37,17 +37,21 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 	ipsetFile := configFolder + "ipset.bak"
 
 	if restoreIPset {
-		_, err := os.Stat(ipsetFile)
-		if err != nil {
-			_, err = os.Create(ipsetFile)
-			fmt.Println("Thereis no ipset backup!")
-		} else {
-			_, err = runCommand(nil, "ipset restore < "+ipsetFile)
+		if isIpsetInstalled(false) {
+			_, err := os.Stat(ipsetFile)
 			if err != nil {
-				LogError("Error restoring ipset: " + err.Error())
+				_, err = os.Create(ipsetFile)
+				fmt.Println("Thereis no ipset backup!")
 			} else {
-				LogInfo("Successfully restored ipset")
+				_, err = runCommand(nil, "ipset restore < "+ipsetFile)
+				if err != nil {
+					LogError("Error restoring ipset: " + err.Error())
+				} else {
+					LogInfo("Successfully restored ipset")
+				}
 			}
+		} else {
+			LogInfo("IPset not installed, can't restore. Skipping")
 		}
 	}
 

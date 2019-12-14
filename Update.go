@@ -30,7 +30,7 @@ var updateCMD = &cli.Command{
 			fmt.Println("You need to be root!")
 			return nil
 		}
-		if !checkCommands() {
+		if !isIpsetInstalled(true) {
 			return nil
 		}
 
@@ -166,10 +166,12 @@ func ipsetRemoveIP(ip string) bool {
 	return false
 }
 
-func checkCommands() bool {
+func isIpsetInstalled(showerror bool) bool {
 	_, err := runCommand(nil, "ipset help")
 	if err != nil {
-		LogInfo("You need to install 'ipset' to run this command!")
+		if showerror {
+			LogInfo("You need to install 'ipset' to run this command!")
+		}
 		return false
 	}
 	return true

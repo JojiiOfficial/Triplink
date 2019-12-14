@@ -44,9 +44,8 @@ func request(url, file string, data []byte, ignoreCert, showErrors bool) (string
 		}
 		if isStatus {
 			return response, isStatus, errors.New(message)
-		} else {
-			return response, isStatus, errors.New("Response error")
 		}
+		return response, isStatus, errors.New("Response error")
 	}
 	if !strings.HasSuffix(response, "}") && !strings.HasPrefix(response, "{") && !strings.HasSuffix(response, "]") && !strings.HasPrefix(response, "]") {
 		if showErrors {

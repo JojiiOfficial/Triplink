@@ -54,20 +54,24 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 	}
 
 	if updateIPset {
-		_, err := os.Stat(ipsetFile)
-		if err != nil {
-			_, err = os.Create(ipsetFile)
+		if isIpsetInstalled(false) {
+			_, err := os.Stat(ipsetFile)
 			if err != nil {
-				LogError("Can't create backup file: " + ipsetFile)
-				return
+				_, err = os.Create(ipsetFile)
+				if err != nil {
+					LogError("Can't create backup file: " + ipsetFile)
+					return
+				}
 			}
-		}
 
-		_, err = runCommand(nil, "ipset save blocklist > "+ipsetFile)
-		if err != nil {
-			LogError("Couldn'd backup ipset: " + err.Error())
+			_, err = runCommand(nil, "ipset save blocklist > "+ipsetFile)
+			if err != nil {
+				LogError("Couldn'd backup ipset: " + err.Error())
+			} else {
+				LogInfo("Ipset backup successfull")
+			}
 		} else {
-			LogInfo("Ipset backup successfull")
+			LogInfo("You need to install ipset to backup ipset data. Skipping")
 		}
 	}
 }
