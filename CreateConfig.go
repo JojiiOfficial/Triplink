@@ -44,18 +44,25 @@ var createConfCMD = &cli.Command{
 }
 
 func createConf(configFile string, argv *newConfT, update bool) {
-	err := (&Config{
+	config := &Config{
 		Host:    argv.Host,
 		LogFile: argv.LogFile,
 		Token:   argv.Token,
-	}).save(configFile)
+	}
+	err := config.save(configFile)
 	if err == nil {
-		if update {
-			LogInfo("Config updated successfully!")
+		pingSuccess := ping(config)
+		if pingSuccess {
+			LogInfo("Config successfully validated")
+			if update {
+				LogInfo("Config updated successfully!")
+			} else {
+				LogInfo("Config created successfully!")
+			}
+			LogInfo(configFile)
 		} else {
-			LogInfo("Config created successfully!")
+			LogError("You can update your config using \"triplink uc -C " + argv.ConfigName + " -r <host> -t <token>\"")
 		}
-		LogInfo(configFile)
 	} else {
 		LogError("Error saving config File: " + err.Error())
 	}

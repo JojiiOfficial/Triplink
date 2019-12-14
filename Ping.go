@@ -60,7 +60,7 @@ var pingCMD = &cli.Command{
 	},
 }
 
-func ping(config *Config) {
+func ping(config *Config) bool {
 	token := config.Token
 	requestData := PingRequest{
 		Token: token,
@@ -69,13 +69,21 @@ func ping(config *Config) {
 	jsondata, err := json.Marshal(requestData)
 	if err != nil {
 		LogCritical("Error creating json:" + err.Error())
-		return
+		return false
 	}
 	res, isStatus, err := request(config.Host, "ping", jsondata, true, false)
+	if err != nil {
+		LogError("Error validating config: " + err.Error())
+		return false
+	}
 	if isStatus {
 		status, _ := responseToStatus(res)
 		LogInfo("Server response: " + status.StatusMessage)
-		return
+		return (status.StatusMessage == "success")
+	}
+	if len(res) > 30 {
+		res = res[:30] + " [...]"
 	}
 	LogError("Got weird server response: " + res)
+	return false
 }
