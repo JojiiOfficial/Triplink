@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func request(url, file string, data []byte, ignoreCert bool) (string, bool, error) {
+func request(url, file string, data []byte, ignoreCert, showErrors bool) (string, bool, error) {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: ignoreCert},
 	}
@@ -35,15 +35,19 @@ func request(url, file string, data []byte, ignoreCert bool) (string, bool, erro
 	response := strings.Trim(strings.ReplaceAll(string(d), "\n", ""), " ")
 	isError, isStatus, code, message := checkResponseErrors([]byte(response))
 	if isError {
-		if code == "error" {
-			LogError(message)
-		} else {
-			fmt.Println("Got " + code + ": " + message)
+		if showErrors {
+			if code == "error" {
+				LogError(message)
+			} else {
+				fmt.Println("Got " + code + ": " + message)
+			}
 		}
 		return response, isStatus, errors.New("Response error")
 	}
 	if !strings.HasSuffix(response, "}") && !strings.HasPrefix(response, "{") && !strings.HasSuffix(response, "]") && !strings.HasPrefix(response, "]") {
-		fmt.Println(response)
+		if showErrors {
+			fmt.Println(response)
+		}
 		return response, false, errors.New("no json was returned")
 	}
 	return response, isStatus, nil

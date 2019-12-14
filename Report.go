@@ -209,7 +209,7 @@ func reportIPs(config Config, reportData ReportStruct, ignorecert bool) bool {
 		LogCritical("Error creating json:" + err.Error())
 		return false
 	}
-	res, isStatus, err := request(config.Host, "reportnew", jsondata, ignorecert)
+	res, isStatus, err := request(config.Host, "reportnew", jsondata, ignorecert, true)
 	if err != nil {
 		LogCritical("Error doing rest call: " + err.Error())
 		return false

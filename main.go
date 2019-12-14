@@ -49,6 +49,7 @@ func main() {
 		cli.Tree(delBackupCMD),
 		cli.Tree(ipinfoCMD),
 		cli.Tree(reportCMD),
+		cli.Tree(pingCMD),
 	).Run(os.Args[1:]); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

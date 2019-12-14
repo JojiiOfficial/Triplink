@@ -14,6 +14,11 @@ type ReportIPStruct struct {
 	Ips   []IPset `json:"ips"`
 }
 
+//PingRequest requestData for a ping
+type PingRequest struct {
+	Token string `json:"token"`
+}
+
 //FetchRequest request strct for fetching changed ips
 type FetchRequest struct {
 	Token  string      `json:"token"`

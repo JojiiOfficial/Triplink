@@ -1,0 +1,81 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/mkideal/cli"
+)
+
+type pingT struct {
+	cli.Helper
+	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Host       string `cli:"r,host" usage:"Specify the host to send the data to"`
+	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+}
+
+var pingCMD = &cli.Command{
+	Name:    "ping",
+	Aliases: []string{"p", "ping", "pin", "pi"},
+	Desc:    "Checks connection to server is successful",
+	Argv:    func() interface{} { return new(pingT) },
+	Fn: func(ctx *cli.Context) error {
+		argv := ctx.Argv().(*pingT)
+
+		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
+		var config *Config
+		if logStatus < 0 {
+			return nil
+		} else if logStatus == 0 {
+			fmt.Println("Config empty. Using parameter as config. You can change them with <config>. Try 'triplink help config' for more information.")
+			if len(argv.Host) == 0 || len(argv.Token) == 0 {
+				fmt.Println("There is no such config file! You have to set all arguments. Try 'triplink help report'")
+				return nil
+			}
+			config = &Config{
+				Host:  argv.Host,
+				Token: argv.Token,
+			}
+		} else {
+			fileConfig := readConfig(configFile)
+			logFile := fileConfig.LogFile
+			host := fileConfig.Host
+			token := fileConfig.Token
+			if len(argv.Host) > 0 {
+				host = argv.Host
+			}
+			if len(argv.Token) > 0 {
+				token = argv.Token
+			}
+			config = &Config{
+				Host:    host,
+				LogFile: logFile,
+				Token:   token,
+				Filter:  fileConfig.Filter,
+			}
+		}
+
+		ping(config)
+		return nil
+	},
+}
+
+func ping(config *Config) {
+	token := config.Token
+	requestData := PingRequest{
+		Token: token,
+	}
+
+	jsondata, err := json.Marshal(requestData)
+	if err != nil {
+		LogCritical("Error creating json:" + err.Error())
+		return
+	}
+	res, isStatus, err := request(config.Host, "ping", jsondata, true, false)
+	if isStatus {
+		status, _ := responseToStatus(res)
+		LogInfo("Server response: " + status.StatusMessage)
+		return
+	}
+	LogError("Got weird server response: " + res)
+}
