@@ -41,9 +41,9 @@ var updateCMD = &cli.Command{
 		if logStatus < 0 {
 			return nil
 		} else if logStatus == 0 {
-			fmt.Println("Config empty. Using parameter as config. You can change them with <config>. Try 'twreporter help config' for more information.")
+			fmt.Println("Config empty. Using parameter as config. You can change them with <config>. Try 'triplink help config' for more information.")
 			if len(argv.Host) == 0 || len(argv.Token) == 0 {
-				fmt.Println("There is no such config file! You have to set all arguments. Try 'twreporter help report'")
+				fmt.Println("There is no such config file! You have to set all arguments. Try 'triplink help report'")
 				return nil
 			}
 			config = &Config{
