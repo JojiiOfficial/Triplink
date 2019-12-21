@@ -20,7 +20,7 @@ type Config struct {
 }
 
 func getConfPath(homeDir string) string {
-	return homeDir + "/" + ".tripwirereporter/"
+	return homeDir + "/" + ".triplink/"
 }
 
 func getConfFile(confPath, confName string) string {

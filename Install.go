@@ -132,7 +132,7 @@ func setTripwire(reader *bufio.Reader, c string) {
 	if handleConfig(config) {
 		return
 	}
-	i, opt := WaitForMessage("How should Tripwire act?\n"+
+	i, opt := WaitForMessage("How should triplink act?\n"+
 		"[1] FETCH and block IPs from server based on a filter\t(blocker)\n"+
 		"[2] REPORT IPs ONLY \t\t\t\t\t(reporter)\n"+
 		"[3] REPORT and FETCH IPs to block using a filter\t(reporter and blocker)\n> ", reader)

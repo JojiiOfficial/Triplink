@@ -58,6 +58,7 @@ var editConfCMD = &cli.Command{
 				}
 				realConf.Token = argv.Token
 				did = true
+				realConf.Filter.Since = 0
 			}
 			if !did {
 				fmt.Println("Nothing to do!")
