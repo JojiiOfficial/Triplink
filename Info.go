@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/mkideal/cli"
 )
@@ -131,16 +130,12 @@ func displayIPdata(ipdata *[]IPInfoData, hideNotFound bool) {
 			}
 			fmt.Println(add + "IP: " + info.IP + " (" + strconv.Itoa(max) + "x)")
 			for _, report := range info.Reports {
-				fmt.Println("  ", parseTime(report.Time), report.ReporterName, ":"+strconv.Itoa(report.Port), "("+strconv.Itoa(report.Count)+"x)")
+				fmt.Println("  ", parseTimeStamp(report.Time), report.ReporterName, ":"+strconv.Itoa(report.Port), "("+strconv.Itoa(report.Count)+"x)")
 			}
 		} else if !hideNotFound {
 			fmt.Println(add + "No report for " + info.IP)
 		}
 	}
-}
-
-func parseTime(unix int64) string {
-	return time.Unix(unix, 0).Format(time.Stamp)
 }
 
 //InitArrayParam split parameter values

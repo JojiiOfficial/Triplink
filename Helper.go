@@ -4,6 +4,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"time"
 )
 
 var reservedIPs = []string{
@@ -101,4 +102,8 @@ func incIP(ip net.IP) {
 			break
 		}
 	}
+}
+
+func parseTimeStamp(unix int64) string {
+	return time.Unix(unix, 0).Format(time.Stamp)
 }

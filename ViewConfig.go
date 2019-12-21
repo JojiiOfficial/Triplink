@@ -33,6 +33,7 @@ var viewConfCMD = &cli.Command{
 		fmt.Println("-------- Configuration --------")
 		fmt.Println("Host:\t\t", conf.Host)
 		fmt.Println("Token:\t\t", conf.Token)
+		fmt.Println("Last fetch:\t", parseTimeStamp(conf.Filter.Since))
 
 		var logadd string
 		if len(conf.LogFile) > 0 {

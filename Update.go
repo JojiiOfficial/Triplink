@@ -72,9 +72,12 @@ var updateCMD = &cli.Command{
 
 //FetchIPs fetches IPs and puts them into a blocklist
 func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
+	if c.Filter.Since == 0 {
+		fetchAll = true
+	}
+
 	if fetchAll {
 		c.Filter.Since = 0
-		flusIPset()
 	}
 	requestData := FetchRequest{
 		Token:  c.Token,
@@ -102,6 +105,9 @@ func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
 
 	c.Filter.Since = fetchresponse.CurrentTimestamp
 	c.save(configFile)
+	if fetchresponse.Full || fetchAll {
+		flusIPset()
+	}
 
 	blockIPs(fetchresponse.IPs)
 	backupIPs(configFile, true, false)
