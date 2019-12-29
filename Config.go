@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
+	"strconv"
 	"strings"
 )
 
@@ -17,6 +19,7 @@ type Config struct {
 	Token         string      `json:"token"`
 	Filter        FetchFilter `json:"fetchFilter"`
 	ShowTimeInLog bool        `json:"showLogTime"`
+	PortsToBlock  string      `json:"portsToBlock"`
 }
 
 func getConfPath(homeDir string) string {
@@ -123,4 +126,45 @@ func getHome() string {
 		return ""
 	}
 	return homeDir
+}
+
+func validatePortsParam(param string) (string, error) {
+	if strings.Contains(param, ",") {
+		ports := strings.Split(param, ",")
+		for _, port := range ports {
+			if !isSinglePortParamValid(port) {
+				return "", errors.New("check your ports")
+			}
+		}
+	} else {
+		if !isSinglePortParamValid(param) {
+			return "", errors.New("port must be an integer. Ranges are defined using a '-'. For example 100-200")
+		}
+	}
+	return strings.ReplaceAll(param, "-", ":"), nil
+}
+
+func isSinglePortParamValid(portParam string) bool {
+	if strings.Contains(portParam, "-") {
+		return isPortRangeValid(portParam)
+	}
+	return isPortValid(portParam)
+}
+
+func isPortRangeValid(portrange string) bool {
+	ports := strings.Split(portrange, "-")
+	if len(ports) == 2 {
+		startPort := ports[0]
+		endPort := ports[1]
+		return (isPortValid(startPort) && isPortValid(endPort) && startPort < endPort)
+	}
+	return false
+}
+
+func isPortValid(port string) bool {
+	i, err := strconv.Atoi(port)
+	if err != nil || (i < 0 || i > 65535) {
+		return false
+	}
+	return true
 }

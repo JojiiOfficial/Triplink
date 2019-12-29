@@ -10,8 +10,8 @@ type newConfT struct {
 	Token      string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
 	Overwrite  bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
 	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from"`
-	Note       string `cli:"n,note" usage:"Sends a very short description"`
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Ports      string `cli:"p,ports" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
 }
 
 var createConfCMD = &cli.Command{
@@ -44,12 +44,18 @@ var createConfCMD = &cli.Command{
 }
 
 func createConf(configFile string, argv *newConfT, update bool) {
-	config := &Config{
-		Host:    argv.Host,
-		LogFile: argv.LogFile,
-		Token:   argv.Token,
+	ports, err := validatePortsParam(argv.Ports)
+	if err != nil {
+		LogError("Error parsing port param: " + err.Error())
+		return
 	}
-	err := config.save(configFile)
+	config := &Config{
+		Host:         argv.Host,
+		LogFile:      argv.LogFile,
+		Token:        argv.Token,
+		PortsToBlock: ports,
+	}
+	err = config.save(configFile)
 	if err == nil {
 		pingSuccess := ping(config)
 		if pingSuccess {

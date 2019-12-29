@@ -13,6 +13,7 @@ type editConfT struct {
 	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from. Use \"rem\" or \"remove\" to make it empty"`
+	Ports      string `cli:"p,ports" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
 }
 
 var editConfCMD = &cli.Command{
@@ -46,6 +47,14 @@ var editConfCMD = &cli.Command{
 					realConf.LogFile = argv.LogFile
 					did = true
 				}
+			}
+			if len(argv.Ports) > 0 {
+				did = true
+				ports, err := validatePortsParam(argv.Ports)
+				if err != nil {
+					return err
+				}
+				realConf.PortsToBlock = ports
 			}
 			if len(argv.Host) > 0 {
 				realConf.Host = argv.Host
