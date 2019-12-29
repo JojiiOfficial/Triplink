@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -10,8 +11,9 @@ import (
 
 type backupT struct {
 	cli.Helper
-	BackupIPtables bool `cli:"t,iptables" usage:"Update iptables" dft:"false"`
-	BackupIPset    bool `cli:"s,ipset" usage:"Update ipset" dft:"true"`
+	BackupIPtables bool   `cli:"t,iptables" usage:"Update iptables" dft:"false"`
+	BackupIPset    bool   `cli:"s,ipset" usage:"Update ipset" dft:"true"`
+	ConfigName     string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 }
 
 var backupCMD = &cli.Command{
@@ -25,16 +27,21 @@ var backupCMD = &cli.Command{
 			return nil
 		}
 		argv := ctx.Argv().(*backupT)
-		_, configFile := createAndValidateConfigFile("")
+		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
+		if logStatus != 1 {
+			return errors.New("config not found")
+		}
 		backupIPs(configFile, argv.BackupIPset, argv.BackupIPtables)
 		return nil
 	},
 }
 
 func backupIPs(configFile string, updateIPset, updateIPtables bool) {
-	configFolder, _ := path.Split(configFile)
-	iptablesFile := configFolder + "iptables.bak"
-	ipsetFile := configFolder + "ipset.bak"
+	configFolder, configfilename := path.Split(configFile)
+	blocklistName := getBlocklistName(configfilename)
+
+	iptablesFile := configFolder + "iptables_" + blocklistName + ".bak"
+	ipsetFile := configFolder + "ipset_" + blocklistName + ".bak"
 
 	if updateIPtables {
 		_, err := os.Stat(iptablesFile)
@@ -64,7 +71,7 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 				}
 			}
 
-			_, err = runCommand(nil, "ipset save blocklist > "+ipsetFile)
+			_, err = runCommand(nil, "ipset save "+blocklistName+" > "+ipsetFile)
 			if err != nil {
 				LogError("Couldn'd backup ipset: " + err.Error())
 			} else {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -10,8 +11,9 @@ import (
 
 type restoreT struct {
 	cli.Helper
-	RestoreIPtables bool `cli:"t,iptables" usage:"Restore iptables" dft:"false"`
-	RestoreIPset    bool `cli:"s,ipset" usage:"Restore ipset" dft:"true"`
+	RestoreIPtables bool   `cli:"t,iptables" usage:"Restore iptables" dft:"false"`
+	RestoreIPset    bool   `cli:"s,ipset" usage:"Restore ipset" dft:"true"`
+	ConfigName      string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 }
 
 var restoreCMD = &cli.Command{
@@ -25,24 +27,29 @@ var restoreCMD = &cli.Command{
 			return nil
 		}
 		argv := ctx.Argv().(*restoreT)
-		_, configFile := createAndValidateConfigFile("")
+		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
+		if logStatus != 1 {
+			return errors.New("config not found")
+		}
 		restoreIPs(configFile, argv.RestoreIPset, argv.RestoreIPtables)
 		return nil
 	},
 }
 
 func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
-	configFolder, _ := path.Split(configFile)
-	iptablesFile := configFolder + "iptables.bak"
-	ipsetFile := configFolder + "ipset.bak"
+	configFolder, configfilename := path.Split(configFile)
+	blocklistName := getBlocklistName(configfilename)
+	iptablesFile := configFolder + "iptables_" + blocklistName + ".bak"
+	ipsetFile := configFolder + "ipset_" + blocklistName + ".bak"
 
 	if restoreIPset {
 		if isIpsetInstalled(false) {
 			_, err := os.Stat(ipsetFile)
 			if err != nil {
 				_, err = os.Create(ipsetFile)
-				fmt.Println("Thereis no ipset backup!")
+				fmt.Println("There is no ipset backup!")
 			} else {
+				fmt.Println("ipset restore < " + ipsetFile)
 				_, err = runCommand(nil, "ipset restore < "+ipsetFile)
 				if err != nil {
 					LogError("Error restoring ipset: " + err.Error())

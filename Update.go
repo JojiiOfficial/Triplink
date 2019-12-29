@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -34,7 +35,8 @@ var updateCMD = &cli.Command{
 			return nil
 		}
 
-		setupIPset()
+		blocklistName := getBlocklistName(argv.ConfigName)
+		setupIPset(blocklistName)
 
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		var config *Config
@@ -61,7 +63,7 @@ var updateCMD = &cli.Command{
 			config = fileConfig
 		}
 
-		err := FetchIPs(config, configFile, argv.FetchAll, argv.IgnoreCert)
+		err := FetchIPs(config, configFile, argv.FetchAll, argv.IgnoreCert, blocklistName)
 		if err != nil {
 			fmt.Println("Error fetching Update: " + err.Error())
 		}
@@ -71,7 +73,7 @@ var updateCMD = &cli.Command{
 }
 
 //FetchIPs fetches IPs and puts them into a blocklist
-func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
+func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool, blocklistName string) error {
 	if c.Filter.Since == 0 {
 		fetchAll = true
 	}
@@ -109,35 +111,35 @@ func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool) error {
 		flusIPset()
 	}
 
-	blockIPs(fetchresponse.IPs)
+	blockIPs(fetchresponse.IPs, blocklistName)
 	backupIPs(configFile, true, false)
 	return nil
 }
 
-func blockIPs(ips []IPList) {
+func blockIPs(ips []IPList, blocklistName string) {
 	addCount := 0
 	remCount := 0
 	for _, ip := range ips {
 		if ip.Deleted == 1 {
-			if ipsetRemoveIP(ip.IP) {
+			if ipsetRemoveIP(ip.IP, blocklistName) {
 				remCount++
 			}
 		} else {
-			if ipsetAddIP(ip.IP) {
+			if ipsetAddIP(ip.IP, blocklistName) {
 				addCount++
 			}
 		}
 	}
-	if activateIPset() {
+	if activateIPset(blocklistName) {
 		LogInfo("Successfully added " + strconv.Itoa(addCount) + " and removed " + strconv.Itoa(remCount) + " IPs")
 	}
 }
 
-func activateIPset() bool {
-	if iptableHasRule() {
+func activateIPset(blocklistName string) bool {
+	if iptableHasRule(blocklistName) {
 		return true
 	}
-	_, err := runCommand(nil, "iptables -I INPUT 1 -m set --match-set blocklist src -j DROP")
+	_, err := runCommand(nil, "iptables -I INPUT 1 -m set --match-set "+blocklistName+" src -j DROP")
 	if err != nil {
 		LogError("Couldn't activate iptable set. Blocking might be unavailable: " + err.Error())
 		return false
@@ -149,24 +151,24 @@ func flusIPset() {
 	runCommand(nil, "ipset flush blocklist")
 }
 
-func iptableHasRule() bool {
-	_, err := runCommand(nil, "iptables -C INPUT -m set --match-set blocklist src -j DROP")
+func iptableHasRule(blocklistName string) bool {
+	_, err := runCommand(nil, "iptables -C INPUT -m set --match-set "+blocklistName+" src -j DROP")
 	return err == nil
 }
 
-func ipsetAddIP(ip string) bool {
+func ipsetAddIP(ip string, blocklistName string) bool {
 	valid, _ := isIPValid(ip)
 	if valid {
-		_, err := runCommand(nil, "ipset add blocklist "+ip)
+		_, err := runCommand(nil, "ipset add "+blocklistName+" "+ip)
 		return err == nil
 	}
 	return false
 }
 
-func ipsetRemoveIP(ip string) bool {
+func ipsetRemoveIP(ip string, blocklistName string) bool {
 	valid, _ := isIPValid(ip)
 	if valid {
-		_, err := runCommand(nil, "ipset del blocklist "+ip)
+		_, err := runCommand(nil, "ipset del "+blocklistName+" "+ip)
 		return err == nil
 	}
 	return false
@@ -183,21 +185,28 @@ func isIpsetInstalled(showerror bool) bool {
 	return true
 }
 
-func hasBlocklist() bool {
-	_, err := runCommand(nil, "ipset list blocklist")
+func hasBlocklist(blocklistName string) bool {
+	_, err := runCommand(nil, "ipset list "+blocklistName)
 	return err == nil
 }
 
-func createBlocklist() bool {
-	_, err := runCommand(nil, "ipset create blocklist nethash")
+func createBlocklist(blocklistName string) bool {
+	_, err := runCommand(nil, "ipset create "+blocklistName+" nethash")
 	return err == nil
 }
 
-func setupIPset() {
-	if !hasBlocklist() {
-		if !createBlocklist() {
+func setupIPset(blocklistName string) {
+	if !hasBlocklist(blocklistName) {
+		if !createBlocklist(blocklistName) {
 			LogError("Couldn't create blocklist! Exiting")
 			os.Exit(1)
 		}
 	}
+}
+
+func getBlocklistName(configName string) string {
+	if strings.Contains(configName, "/") {
+		_, configName = path.Split(configName)
+	}
+	return "blocklist_"+configName[:strings.LastIndex(configName, ".")]
 }

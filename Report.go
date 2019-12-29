@@ -184,7 +184,8 @@ var reportCMD = &cli.Command{
 		}
 
 		if argv.DoUpdate {
-			FetchIPs(config, configFile, argv.UpdateEverything, argv.IgnoreCert)
+			blocklistName := getBlocklistName(argv.ConfigName)
+			FetchIPs(config, configFile, argv.UpdateEverything, argv.IgnoreCert, blocklistName)
 		}
 
 		return nil
