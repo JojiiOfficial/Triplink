@@ -52,7 +52,7 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 				fmt.Println("ipset restore < " + ipsetFile)
 				_, err = runCommand(nil, "ipset restore < "+ipsetFile)
 				if err != nil {
-					LogError("Error restoring ipset: " + err.Error())
+					LogError("Error restoring ipset: " + err.Error()+" -> \""+"ipset restore < "+ipsetFile+"\"")
 				} else {
 					LogInfo("Successfully restored ipset")
 				}
@@ -69,7 +69,7 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 		} else {
 			_, err = runCommand(nil, "iptables-restore < "+iptablesFile)
 			if err != nil {
-				LogError("Error restoring iptables: " + err.Error())
+				LogError("Error restoring iptables: " + err.Error()+"-> \""+"iptables-restore < "+iptablesFile+"\"")
 			} else {
 				LogInfo("Successfully restored iptables")
 			}

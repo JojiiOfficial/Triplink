@@ -54,7 +54,7 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 
 		_, err = runCommand(nil, "iptables-save > "+iptablesFile)
 		if err != nil {
-			LogError("Couldn'd backup iptables: " + err.Error())
+			LogError("Couldn'd backup iptables: " + err.Error()+"-> \""+ "iptables-save > "+iptablesFile +"\"")
 		} else {
 			LogInfo("Iptables backup successfull")
 		}
@@ -73,7 +73,7 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 
 			_, err = runCommand(nil, "ipset save "+blocklistName+" > "+ipsetFile)
 			if err != nil {
-				LogError("Couldn'd backup ipset: " + err.Error())
+				LogError("Couldn'd backup ipset: " + err.Error() + "-> \"" + "ipset save " + blocklistName + " > " + ipsetFile + "\"")
 			} else {
 				LogInfo("Ipset backup successfull")
 			}
