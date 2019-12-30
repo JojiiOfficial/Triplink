@@ -16,6 +16,7 @@ type delBackupT struct {
 	BackupIPset    bool   `cli:"s,ipset" usage:"Update ipset" dft:"false"`
 	Yes            bool   `cli:"y,yes" usage:"Don't confirm deletion" dft:"false"`
 	ConfigName     string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var delBackupCMD = &cli.Command{
@@ -29,6 +30,7 @@ var delBackupCMD = &cli.Command{
 			return nil
 		}
 		argv := ctx.Argv().(*delBackupT)
+		verboseLevel = argv.Verbose
 		if !argv.BackupIPtables && !argv.BackupIPset {
 			LogInfo("nothing to do")
 			return nil

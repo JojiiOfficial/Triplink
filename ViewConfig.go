@@ -10,6 +10,7 @@ import (
 type viewConfT struct {
 	cli.Helper
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var viewConfCMD = &cli.Command{
@@ -19,6 +20,7 @@ var viewConfCMD = &cli.Command{
 	Argv:    func() interface{} { return new(viewConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*viewConfT)
+		verboseLevel = argv.Verbose
 
 		confFile := getConfFile(getConfPath(getHome()), argv.ConfigName)
 		fmt.Println(confFile)
@@ -40,7 +42,9 @@ var viewConfCMD = &cli.Command{
 			fmt.Println("LogFile:\t", conf.LogFile)
 			logadd = "-f " + conf.LogFile
 		}
-		fmt.Println("\nRecreate this config:\ntriplink cc -t "+conf.Token, "-r", conf.Host, logadd)
+		if verboseLevel > 0{
+			fmt.Println("\nRecreate this config:\ntriplink cc -t "+conf.Token, "-r", conf.Host, logadd)
+		}
 
 		return nil
 	},

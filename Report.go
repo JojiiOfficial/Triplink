@@ -22,6 +22,7 @@ type reportT struct {
 	CustomIPs        string `cli:"c,custom" usage:"Report a custom IPset separated by semicolon and comma (eg: \"ip,port,count;ip2,port,count\")"`
 	IgnoreCert       bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
 	ConfigName       string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var reportCMD = &cli.Command{
@@ -31,7 +32,7 @@ var reportCMD = &cli.Command{
 	Argv:    func() interface{} { return new(reportT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*reportT)
-
+		verboseLevel = argv.Verbose
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		var config *Config
 		if logStatus < 0 {
@@ -217,7 +218,9 @@ func reportIPs(config Config, reportData ReportStruct, ignorecert bool) bool {
 	}
 	if isStatus {
 		status, _ := responseToStatus(res)
-		LogInfo("Server response: " + status.StatusMessage)
+		if verboseLevel > 0{
+			LogInfo("Server response: " + status.StatusMessage)
+		}
 		return (status.StatusMessage == "success")
 	}
 	LogError("Got weird server response: " + res)

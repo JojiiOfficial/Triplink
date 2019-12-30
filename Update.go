@@ -95,7 +95,7 @@ func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool, blocklist
 	data, _, err := request(c.Host, "fetch", js, ignoreCert, true)
 	data = strings.ReplaceAll(data, "\n", "")
 	if err != nil || data == "[]" {
-		if data == "\"[]\"" {
+		if data == "\"[]\"" && verboseLevel > 0{
 			LogInfo("Nothing to do (updating)")
 		}
 		return err

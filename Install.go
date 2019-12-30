@@ -14,6 +14,7 @@ import (
 type installT struct {
 	cli.Helper
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var installCMD = &cli.Command{
@@ -27,6 +28,7 @@ var installCMD = &cli.Command{
 			return nil
 		}
 		argv := ctx.Argv().(*installT)
+		verboseLevel = argv.Verbose
 		reader := bufio.NewReader(os.Stdin)
 
 		i, text := WaitForMessage("What kind of system do you want to setup?\n[t] Tripwire\n[i] iptables/set\n> ", reader)
@@ -215,7 +217,7 @@ func crontab(content, description string, showiptablesinfo bool) {
 	_, err = runCommand(nil, "systemctl restart cron")
 	if err != nil {
 		fmt.Println("Error restarting cron!")
-	} else {
+	} else if verboseLevel > 0 {
 		fmt.Println("Restarted cron successfully")
 	}
 }

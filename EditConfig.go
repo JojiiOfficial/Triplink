@@ -24,6 +24,7 @@ var editConfCMD = &cli.Command{
 	Argv:    func() interface{} { return new(editConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*editConfT)
+		verboseLevel = argv.Verbose
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			fmt.Println("Couldn't retrieve homeDir!")

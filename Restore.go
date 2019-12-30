@@ -14,6 +14,7 @@ type restoreT struct {
 	RestoreIPtables bool   `cli:"t,iptables" usage:"Restore iptables" dft:"false"`
 	RestoreIPset    bool   `cli:"s,ipset" usage:"Restore ipset" dft:"true"`
 	ConfigName      string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Verbose         int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var restoreCMD = &cli.Command{
@@ -27,6 +28,7 @@ var restoreCMD = &cli.Command{
 			return nil
 		}
 		argv := ctx.Argv().(*restoreT)
+		verboseLevel = argv.Verbose
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		if logStatus != 1 {
 			return errors.New("config not found")
@@ -47,7 +49,7 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 			stat, err := os.Stat(ipsetFile)
 			if err != nil || stat.Size() == 0 {
 				_, err = os.Create(ipsetFile)
-				LogInfo("There is no ipset backup!")
+				LogInfo("There is no ipset backup! Skipping")
 			} else {
 				_, err = runCommand(nil, "ipset restore < "+ipsetFile)
 				if err != nil {
@@ -64,7 +66,7 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 	if restoreIPtables {
 		stat, err := os.Stat(iptablesFile)
 		if err != nil || stat.Size() == 0 {
-			LogError("There is no iptables backup!")
+			LogError("There is no iptables backup! Skipping")
 		} else {
 			_, err = runCommand(nil, "iptables-restore < "+iptablesFile)
 			if err != nil {
