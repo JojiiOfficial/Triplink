@@ -154,9 +154,14 @@ func isSinglePortParamValid(portParam string) bool {
 func isPortRangeValid(portrange string) bool {
 	ports := strings.Split(portrange, "-")
 	if len(ports) == 2 {
-		startPort := ports[0]
-		endPort := ports[1]
-		return (isPortValid(startPort) && isPortValid(endPort) && startPort < endPort)
+		var start, end int
+		if isPortValid(ports[0]) && isPortValid(ports[1]) {
+			start, _ = strconv.Atoi(ports[0])
+			end, _ = strconv.Atoi(ports[1])
+			if end > start{
+				return true
+			}
+		}
 	}
 	return false
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 
 	"github.com/mkideal/cli"
@@ -111,12 +110,12 @@ func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool, blocklist
 		flusIPset()
 	}
 
-	blockIPs(fetchresponse.IPs, blocklistName)
+	blockIPs(fetchresponse.IPs, blocklistName, c)
 	backupIPs(configFile, true, false)
 	return nil
 }
 
-func blockIPs(ips []IPList, blocklistName string) {
+func blockIPs(ips []IPList, blocklistName string, config *Config) {
 	addCount := 0
 	remCount := 0
 	for _, ip := range ips {
@@ -130,30 +129,110 @@ func blockIPs(ips []IPList, blocklistName string) {
 			}
 		}
 	}
-	if activateIPset(blocklistName) {
-		LogInfo("Successfully added " + strconv.Itoa(addCount) + " and removed " + strconv.Itoa(remCount) + " IPs")
+
+	errorCreatingtriplinkChain := checkChain("triplink")
+	if errorCreatingtriplinkChain {
+		LogError("Couldn't create triplinkchain! Blocking might be unavailable")
+		return
 	}
+	errorCreatingblnChain := checkChain(blocklistName)
+	if errorCreatingblnChain {
+		LogError("Couldn't create blocklist-chain! Blocking might be unavailable")
+		return
+	}
+
+	commands := []iptableCommand{
+		//INPUT -> triplink
+		iptableCommand{
+			"A",
+			"INPUT -j triplink",
+		},
+		//triplink -> bloclist_config if not udp
+		iptableCommand{
+			"I",
+			"triplink ! -p udp -j " + blocklistName,
+		},
+		//DROP if not tcp
+		iptableCommand{
+			"A",
+			blocklistName + " ! -p tcp -m set --match-set " + blocklistName + " src -j DROP",
+		},
+		//RETURN back to triplink
+		iptableCommand{
+			"A",
+			blocklistName + " -j RETURN",
+		},
+		//DROP TCP PORTS
+		iptableCommand{
+			"I",
+			"triplink -p tcp -m set --match-set " + blocklistName + " src -m multiport --dports " + config.PortsToBlock + " -j DROP",
+		},
+		iptableCommand{
+			"I",
+			"triplink -p udp -m set --match-set " + blocklistName + " src -m multiport --dports " + config.PortsToBlock + " -j DROP",
+		},
+		iptableCommand{
+			"A",
+			"triplink -j RETURN",
+		},
+	}
+
+	for _, cmd := range commands {
+		if !runIptablesAction(cmd) {
+			return
+		}
+	}
+	//LogInfo("Successfully added " + strconv.Itoa(addCount) + " and removed " + strconv.Itoa(remCount) + " IPs")
+
+	//if activateIPset(blocklistName, config.PortsToBlock) {
+	//}
 }
 
-func activateIPset(blocklistName string) bool {
-	if iptableHasRule(blocklistName) {
+/*
+func activateIPset(blocklistName string, blockedPorts string) bool {
+	if iptableHasRule(blocklistName, blockedPorts) {
 		return true
 	}
-	_, err := runCommand(nil, "iptables -I INPUT 1 -m set --match-set "+blocklistName+" src -j DROP")
+	_, err := runCommand(nil, "iptables -I INPUT 1 -m set --match-set "+blocklistName+" src -p tcp --match multiport --dports "+blockedPorts+" -j DROP")
 	if err != nil {
-		LogError("Couldn't activate iptable set. Blocking might be unavailable: " + err.Error())
+		LogError("Couldn't activate iptable set. Blocking might be unavailable: " + err.Error() + " -> \"" + "iptables -I INPUT 1 -m set --match-set " + blocklistName + " src -p tcp --match multiport --dports " + blockedPorts + " -j DROP" + "\"")
 		return false
+	}
+	return true
+}
+func iptableHasRule(blocklistName string, blockedPorts string) bool {
+	_, err := runCommand(nil, "iptables -C INPUT -m set --match-set "+blocklistName+" src -p tcp --match multiport --dports "+blockedPorts+" -j DROP")
+	return err == nil
+}
+*/
+
+type iptableCommand struct {
+	action, args string
+}
+
+func runIptablesAction(cmd iptableCommand, igncheck ...bool) bool {
+	do := false
+	if len(igncheck) == 0 || (len(igncheck) > 0 && !igncheck[0]) {
+		_, err := runCommand(nil, "iptables -C "+cmd.args)
+		if err != nil {
+			do = true
+		}
+	} else {
+		do = true
+	}
+	if do {
+		_, err := runCommand(nil, "iptables -"+cmd.action+" "+cmd.args)
+		fmt.Println("iptables -" + cmd.action + " " + cmd.args)
+		if err != nil {
+			LogError("Can't run \"iptables -" + cmd.action + " " + cmd.args + "\" " + err.Error())
+			return false
+		}
 	}
 	return true
 }
 
 func flusIPset() {
 	runCommand(nil, "ipset flush blocklist")
-}
-
-func iptableHasRule(blocklistName string) bool {
-	_, err := runCommand(nil, "iptables -C INPUT -m set --match-set "+blocklistName+" src -j DROP")
-	return err == nil
 }
 
 func ipsetAddIP(ip string, blocklistName string) bool {
@@ -208,5 +287,20 @@ func getBlocklistName(configName string) string {
 	if strings.Contains(configName, "/") {
 		_, configName = path.Split(configName)
 	}
-	return "blocklist_"+configName[:strings.LastIndex(configName, ".")]
+	until := len(configName)
+	if strings.Contains(configName, ".") {
+		until = strings.LastIndex(configName, ".")
+	}
+	return "blocklist_" + configName[:until]
+}
+
+func checkChain(name string) bool {
+	_, err := runCommand(nil, "iptables -L "+name)
+	if err != nil {
+		_, err = runCommand(nil, "iptables -N "+name)
+		if err != nil {
+			return true
+		}
+	}
+	return false
 }

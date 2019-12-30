@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/mkideal/cli"
 )
 
@@ -21,6 +24,11 @@ var createConfCMD = &cli.Command{
 	Argv:    func() interface{} { return new(newConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*newConfT)
+
+		if os.Getuid() != 0 && len(argv.Ports) > 0 && argv.Ports != "0-65535" {
+			LogError("You can't specify ports. Only root is allowed to do that")
+			return nil
+		}
 
 		if len(argv.LogFile) > 0 {
 			logFileExists := validateLogFile(argv.LogFile)
@@ -55,6 +63,13 @@ func createConf(configFile string, argv *newConfT, update bool) {
 		Token:        argv.Token,
 		PortsToBlock: ports,
 	}
+	fmt.Println(ports)
+
+	if os.Getuid() == 0 {
+		bln := getBlocklistName(configFile)
+		blockIPs([]IPList{}, bln, config)
+	}
+
 	err = config.save(configFile)
 	if err == nil {
 		pingSuccess := ping(config)

@@ -13,7 +13,7 @@ type editConfT struct {
 	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from. Use \"rem\" or \"remove\" to make it empty"`
-	Ports      string `cli:"p,ports" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
+	Ports      string `cli:"p,ports,port" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
 }
 
 var editConfCMD = &cli.Command{
@@ -26,6 +26,10 @@ var editConfCMD = &cli.Command{
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			fmt.Println("Couldn't retrieve homeDir!")
+			return nil
+		}
+		if os.Getuid() != 0 && len(argv.Ports) > 0 {
+			LogError("You can't specify ports. Only root is allowed to do that")
 			return nil
 		}
 		confPath := getConfPath(homeDir)
@@ -54,7 +58,12 @@ var editConfCMD = &cli.Command{
 				if err != nil {
 					return err
 				}
-				realConf.PortsToBlock = ports
+				if clearIptableRules(getBlocklistName(argv.ConfigName), realConf.PortsToBlock) {
+					realConf.PortsToBlock = ports
+					blockIPs([]IPList{}, getBlocklistName(argv.ConfigName), realConf)
+				} else {
+					return nil
+				}
 			}
 			if len(argv.Host) > 0 {
 				realConf.Host = argv.Host
@@ -84,4 +93,37 @@ var editConfCMD = &cli.Command{
 		}
 		return nil
 	},
+}
+
+func clearIptableRules(blocklistName, oldPorts string) bool {
+	fmt.Println(oldPorts)
+	commandso := []iptableCommand{
+		//triplink -> bloclist_config if not udp
+		iptableCommand{
+			"D",
+			"triplink ! -p udp -j " + blocklistName,
+		},
+		//DROP if not tcp
+		iptableCommand{
+			"F",
+			blocklistName,
+		},
+		//DROP TCP PORTS
+		iptableCommand{
+			"D",
+			"triplink -p tcp -m set --match-set " + blocklistName + " src -m multiport --dports " + oldPorts + " -j DROP",
+		},
+		iptableCommand{
+			"D",
+			"triplink -p udp -m set --match-set " + blocklistName + " src -m multiport --dports " + oldPorts + " -j DROP",
+		},
+	}
+
+	for _, cmd := range commandso {
+		if !runIptablesAction(cmd, true) {
+			continue
+		}
+	}
+	runCommand(nil, "iptables -X "+blocklistName)
+	return true
 }
