@@ -78,7 +78,9 @@ func ping(config *Config) bool {
 	}
 	if isStatus {
 		status, _ := responseToStatus(res)
-		LogInfo("Server response: " + status.StatusMessage)
+		if verboseLevel > 0{
+			LogInfo("Server response: " + status.StatusMessage)
+		}
 		return (status.StatusMessage == "success")
 	}
 	if len(res) > 30 {

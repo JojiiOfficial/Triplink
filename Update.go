@@ -18,6 +18,7 @@ type updateConfT struct {
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	FetchAll   bool   `cli:"a,all" usage:"Fetches everything"`
 	IgnoreCert bool   `cli:"i,ignorecert" usage:"Ignore invalid certs" dft:"false"`
+	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var updateCMD = &cli.Command{
@@ -27,6 +28,7 @@ var updateCMD = &cli.Command{
 	Argv:    func() interface{} { return new(updateConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*updateConfT)
+		verboseLevel = argv.Verbose
 		if os.Getuid() != 0 {
 			fmt.Println("You need to be root!")
 			return nil
@@ -158,8 +160,10 @@ func runIptablesAction(cmd iptableCommand, igncheck ...bool) bool {
 	}
 	if do {
 		_, err := runCommand(nil, "iptables -"+cmd.action+" "+cmd.args)
-		fmt.Println("iptables -" + cmd.action + " " + cmd.args)
-		if err != nil {
+		if verboseLevel > 1 {
+			fmt.Println("iptables -" + cmd.action + " " + cmd.args)
+		}
+		if err != nil && verboseLevel > 2 {
 			LogError("Can't run \"iptables -" + cmd.action + " " + cmd.args + "\" " + err.Error())
 			return false
 		}

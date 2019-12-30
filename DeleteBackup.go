@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -11,9 +12,10 @@ import (
 
 type delBackupT struct {
 	cli.Helper
-	BackupIPtables bool `cli:"t,iptables" usage:"Update iptables" dft:"false"`
-	BackupIPset    bool `cli:"s,ipset" usage:"Update ipset" dft:"false"`
-	Yes            bool `cli:"y,yes" usage:"Don't confirm deletion" dft:"false"`
+	BackupIPtables bool   `cli:"t,iptables" usage:"Update iptables" dft:"false"`
+	BackupIPset    bool   `cli:"s,ipset" usage:"Update ipset" dft:"false"`
+	Yes            bool   `cli:"y,yes" usage:"Don't confirm deletion" dft:"false"`
+	ConfigName     string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 }
 
 var delBackupCMD = &cli.Command{
@@ -31,7 +33,10 @@ var delBackupCMD = &cli.Command{
 			LogInfo("nothing to do")
 			return nil
 		}
-		_, configFile := createAndValidateConfigFile("")
+		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
+		if logStatus != 1 {
+			return errors.New("config not found")
+		}
 		delBackup(configFile, argv.BackupIPset, argv.BackupIPtables, argv.Yes)
 		return nil
 	},

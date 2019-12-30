@@ -14,6 +14,7 @@ type newConfT struct {
 	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from"`
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	Ports      string `cli:"p,ports" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
+	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var createConfCMD = &cli.Command{
@@ -23,7 +24,7 @@ var createConfCMD = &cli.Command{
 	Argv:    func() interface{} { return new(newConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*newConfT)
-
+		verboseLevel = argv.Verbose
 		if os.Getuid() != 0 && len(argv.Ports) > 0 && argv.Ports != "0-65535" {
 			LogError("You can't specify ports. Only root is allowed to do that")
 			return nil
@@ -67,13 +68,17 @@ func createConf(configFile string, argv *newConfT, update bool) {
 	if err == nil {
 		pingSuccess := ping(config)
 		if pingSuccess {
-			LogInfo("Config successfully validated")
+			if verboseLevel > 1 {
+				LogInfo("Config successfully validated")
+			}
 			if update {
 				LogInfo("Config updated successfully!")
 			} else {
 				LogInfo("Config created successfully!")
 			}
-			LogInfo(configFile)
+			if verboseLevel > 0 {
+				LogInfo(configFile)
+			}
 		} else {
 			LogError("You can update your config using \"triplink uc -C " + argv.ConfigName + " -r <host> -t <token>\"")
 		}

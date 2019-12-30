@@ -27,6 +27,10 @@ var backupCMD = &cli.Command{
 			return nil
 		}
 		argv := ctx.Argv().(*backupT)
+		if !argv.BackupIPtables && !argv.BackupIPset {
+			LogInfo("nothing to do")
+			return nil
+		}
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		if logStatus != 1 {
 			return errors.New("config not found")
@@ -54,7 +58,7 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 
 		_, err = runCommand(nil, "iptables-save > "+iptablesFile)
 		if err != nil {
-			LogError("Couldn'd backup iptables: " + err.Error()+"-> \""+ "iptables-save > "+iptablesFile +"\"")
+			LogError("Couldn'd backup iptables: " + err.Error() + "-> \"" + "iptables-save > " + iptablesFile + "\"")
 		} else {
 			LogInfo("Iptables backup successfull")
 		}
@@ -62,6 +66,10 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 
 	if updateIPset {
 		if isIpsetInstalled(false) {
+			if !hasBlocklist(blocklistName) {
+				LogInfo("Skipping ipset backup: no blocklist found")
+				return
+			}
 			_, err := os.Stat(ipsetFile)
 			if err != nil {
 				_, err = os.Create(ipsetFile)

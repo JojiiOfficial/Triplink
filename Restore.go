@@ -44,15 +44,14 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 
 	if restoreIPset {
 		if isIpsetInstalled(false) {
-			_, err := os.Stat(ipsetFile)
-			if err != nil {
+			stat, err := os.Stat(ipsetFile)
+			if err != nil || stat.Size() == 0 {
 				_, err = os.Create(ipsetFile)
-				fmt.Println("There is no ipset backup!")
+				LogInfo("There is no ipset backup!")
 			} else {
-				fmt.Println("ipset restore < " + ipsetFile)
 				_, err = runCommand(nil, "ipset restore < "+ipsetFile)
 				if err != nil {
-					LogError("Error restoring ipset: " + err.Error()+" -> \""+"ipset restore < "+ipsetFile+"\"")
+					LogError("Error restoring ipset: " + err.Error() + " -> \"" + "ipset restore < " + ipsetFile + "\"")
 				} else {
 					LogInfo("Successfully restored ipset")
 				}
@@ -63,13 +62,13 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 	}
 
 	if restoreIPtables {
-		_, err := os.Stat(iptablesFile)
-		if err != nil {
+		stat, err := os.Stat(iptablesFile)
+		if err != nil || stat.Size() == 0 {
 			LogError("There is no iptables backup!")
 		} else {
 			_, err = runCommand(nil, "iptables-restore < "+iptablesFile)
 			if err != nil {
-				LogError("Error restoring iptables: " + err.Error()+"-> \""+"iptables-restore < "+iptablesFile+"\"")
+				LogError("Error restoring iptables: " + err.Error() + "-> \"" + "iptables-restore < " + iptablesFile + "\"")
 			} else {
 				LogInfo("Successfully restored iptables")
 			}
