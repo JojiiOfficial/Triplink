@@ -51,6 +51,7 @@ func restoreIPs(configFile string, restoreIPset, restoreIPtables bool) {
 				_, err = os.Create(ipsetFile)
 				LogInfo("There is no ipset backup! Skipping")
 			} else {
+				runCommand(nil, "ipset flush "+blocklistName)
 				_, err = runCommand(nil, "ipset restore < "+ipsetFile)
 				if err != nil {
 					LogError("Error restoring ipset: " + err.Error() + " -> \"" + "ipset restore < " + ipsetFile + "\"")

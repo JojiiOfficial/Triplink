@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"os/exec"
@@ -71,6 +72,9 @@ func appendLogs(newf, logs string) {
 }
 
 func runCommand(errorHandler func(error, string), sCmd string) (outb string, err error) {
+	if verboseLevel > 2 {
+		fmt.Println(sCmd)
+	}
 	out, err := exec.Command("sh", "-c", sCmd).Output()
 	output := string(out)
 	if err != nil {

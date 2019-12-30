@@ -95,7 +95,7 @@ func FetchIPs(c *Config, configFile string, fetchAll, ignoreCert bool, blocklist
 	data, _, err := request(c.Host, "fetch", js, ignoreCert, true)
 	data = strings.ReplaceAll(data, "\n", "")
 	if err != nil || data == "[]" {
-		if data == "\"[]\"" && verboseLevel > 0{
+		if data == "\"[]\"" && verboseLevel > 0 {
 			LogInfo("Nothing to do (updating)")
 		}
 		return err
@@ -160,9 +160,6 @@ func runIptablesAction(cmd iptableCommand, igncheck ...bool) bool {
 	}
 	if do {
 		_, err := runCommand(nil, "iptables -"+cmd.action+" "+cmd.args)
-		if verboseLevel > 1 {
-			fmt.Println("iptables -" + cmd.action + " " + cmd.args)
-		}
 		if err != nil && verboseLevel > 2 {
 			LogError("Can't run \"iptables -" + cmd.action + " " + cmd.args + "\" " + err.Error())
 			return false
