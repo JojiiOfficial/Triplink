@@ -10,7 +10,7 @@ import (
 
 var logPrefix = ""
 var showTimeInLog = true
-var version = "0.7"
+var version = "0.73"
 var verboseLevel int
 
 func main() {
