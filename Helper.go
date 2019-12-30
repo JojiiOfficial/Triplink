@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"time"
 )
 
@@ -110,4 +111,8 @@ func incIP(ip net.IP) {
 
 func parseTimeStamp(unix int64) string {
 	return time.Unix(unix, 0).Format(time.Stamp)
+}
+
+func isURL(str string) (bool, error) {
+	return regexp.MatchString("^(https://|http://){1}([a-zA-Z-\\.0-9_äöü]+\\.(com|org|net|tech|xyz|online|me|cn|ch|us|co|go|edu|info|ly|de|tld|es|info|it|eu|at|biz|berlin|space|store|shop)[/a-zA-Z0-9?\\-_äöü]*$|localhost($|:[0-9]+)|([0-9]{1,3}.){3}([0-9]{1})($|:[0-9]+)$)", str)
 }

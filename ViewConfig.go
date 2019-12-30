@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mkideal/cli"
 )
@@ -14,22 +16,23 @@ type viewConfT struct {
 }
 
 var viewConfCMD = &cli.Command{
-	Name:    "viewConfig",
-	Aliases: []string{"vconf", "vc", "viewc", "showconf", "showconfig", "config", "conf", "confshow", "confview"},
+	Name:    "view",
+	Aliases: []string{"v", "display"},
 	Desc:    "View a configuration file",
 	Argv:    func() interface{} { return new(viewConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*viewConfT)
 		verboseLevel = argv.Verbose
-
+		if len(strings.Trim(argv.ConfigName, " ")) == 0 {
+			return errors.New("You need to specify a config")
+		}
 		confFile := getConfFile(getConfPath(getHome()), argv.ConfigName)
 		if verboseLevel > 1 {
 			fmt.Println("Config:", confFile)
 		}
 		_, err := os.Stat(confFile)
 		if err != nil {
-			fmt.Println("No config found. Nothing to do.")
-			return nil
+			return errors.New("Config \"" + argv.ConfigName + "\" not found")
 		}
 
 		conf := readConfig(confFile)
@@ -56,7 +59,7 @@ var viewConfCMD = &cli.Command{
 					logadd += "-R false"
 				}
 			}
-			fmt.Println("\nRecreate this config:\ntriplink cc -t "+conf.Token, "-r", conf.Host, logadd)
+			fmt.Println("\nRecreate this config:\ntriplink config create -t "+conf.Token, "-r", conf.Host, logadd)
 		}
 
 		return nil

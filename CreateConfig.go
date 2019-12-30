@@ -1,15 +1,17 @@
 package main
 
 import (
+	"errors"
 	"os"
+	"strings"
 
 	"github.com/mkideal/cli"
 )
 
 type newConfT struct {
 	cli.Helper
-	Host        string `cli:"*r,host" usage:"Specify the host to send the data to"`
-	Token       string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
+	Host        string `cli:"r,host" usage:"Specify the host to send the data to"`
+	Token       string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
 	Overwrite   bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
 	LogFile     string `cli:"f,file" usage:"Specify the file to read the logs from"`
 	ConfigName  string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
@@ -18,9 +20,26 @@ type newConfT struct {
 	Verbose     int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
+func (argv *newConfT) Validate(ctx *cli.Context) error {
+	if len(strings.Trim(argv.Host, " ")) == 0 {
+		return errors.New("Host missing. Use --host or -r to specify a host")
+	}
+	match, err := isURL(argv.Host)
+	if err != nil{
+		return err
+	}
+	if !match{
+		return errors.New("Host must be an URL")
+	}
+	if len(strings.Trim(argv.Token, " ")) == 0 {
+		return errors.New("Token missing. Use --token or -t to specify a token")
+	}
+	return nil
+}
+
 var createConfCMD = &cli.Command{
-	Name:    "createConfig",
-	Aliases: []string{"cc", "cconf", "createconf", "createconfig"},
+	Name:    "create",
+	Aliases: []string{"c"},
 	Desc:    "Create a new configuration file",
 	Argv:    func() interface{} { return new(newConfT) },
 	Fn: func(ctx *cli.Context) error {
@@ -85,7 +104,7 @@ func createConf(configFile string, argv *newConfT, update bool) {
 				LogInfo(configFile)
 			}
 		} else {
-			LogError("You can update your config using \"triplink uc -C " + argv.ConfigName + " -r <host> -t <token>\"")
+			LogError("You can update your config using \"triplink config update -C " + argv.ConfigName + " -r <host> -t <token>\"")
 		}
 	} else {
 		LogError("Error saving config File: " + err.Error())

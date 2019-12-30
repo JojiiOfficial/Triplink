@@ -18,7 +18,7 @@ type backupT struct {
 }
 
 var backupCMD = &cli.Command{
-	Name:    "backup",
+	Name:    "create",
 	Aliases: []string{"b", "bak", "backup"},
 	Desc:    "backups ipset(-s) and (iptables with -t)",
 	Argv:    func() interface{} { return new(backupT) },

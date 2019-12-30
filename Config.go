@@ -48,7 +48,7 @@ func readConfig(file string) *Config {
 		panic(err)
 	}
 	if len(dat) == 0 {
-		fmt.Println("Config empty. Create a new config with triplink cc -r <host> -t <token>")
+		fmt.Println("Config empty. Create a new config with triplink config create -r <host> -t <token>")
 		os.Exit(1)
 		return nil
 	}

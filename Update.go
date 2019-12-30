@@ -21,10 +21,10 @@ type updateConfT struct {
 	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
-var updateCMD = &cli.Command{
-	Name:    "update",
+var fetchCMD = &cli.Command{
+	Name:    "fetch",
 	Aliases: []string{"u", "upd", "update"},
-	Desc:    "Download and apply IP filter",
+	Desc:    "Fetch and block IPs matching the filter assigned to the token",
 	Argv:    func() interface{} { return new(updateConfT) },
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*updateConfT)
@@ -45,9 +45,9 @@ var updateCMD = &cli.Command{
 		if logStatus < 0 {
 			return nil
 		} else if logStatus == 0 {
-			fmt.Println("Config empty. Using parameter as config. You can change them with <config>. Try 'triplink help config' for more information.")
+			fmt.Println(configEmptyError)
 			if len(argv.Host) == 0 || len(argv.Token) == 0 {
-				fmt.Println("There is no such config file! You have to set all arguments. Try 'triplink help report'")
+				fmt.Println(noSuchConfigError)
 				return nil
 			}
 			config = &Config{
