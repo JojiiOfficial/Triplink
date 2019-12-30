@@ -141,6 +141,7 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) bool {
 		LogInfo("Skipping iptables-rules check due configuration")
 	}
 
+	//ToDo
 	if addCount > 0 || remCount > 0 {
 		LogInfo("Successfully added " + strconv.Itoa(addCount) + " and removed " + strconv.Itoa(remCount) + " IPs")
 	}

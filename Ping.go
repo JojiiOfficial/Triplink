@@ -54,7 +54,7 @@ var pingCMD = &cli.Command{
 				Filter:  fileConfig.Filter,
 			}
 		}
-
+		verboseLevel = 1
 		ping(config)
 		return nil
 	},

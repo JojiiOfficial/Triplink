@@ -17,6 +17,7 @@ func main() {
 	rootCommand := os.Args[1:]
 
 	err := cli.Root(root,
+		cli.Tree(cli.HelpCommand(displayHelpInformation)),
 		cli.Tree(rootConfigCMD,
 			cli.Tree(cli.HelpCommand(displayHelpInformation)),
 			cli.Tree(createConfCMD),
@@ -30,7 +31,6 @@ func main() {
 			cli.Tree(restoreCMD),
 			cli.Tree(delBackupCMD),
 		),
-		cli.Tree(cli.HelpCommand(displayHelpInformation)),
 		cli.Tree(fetchCMD),
 		cli.Tree(installCMD),
 		cli.Tree(rulesCMD),
