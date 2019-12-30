@@ -2,7 +2,14 @@
 This is a client which parses the logs from [Tripwire](https://github.com/JojiiOfficial/Tripwire) and uploads the IPs to a [server](https://github.com/JojiiOfficial/ScanBanServer). The logs from [Tripwire](https://github.com/JojiiOfficial/Tripwire) are in most cases webscanner who scan your machine(s) to make analytics or want to hack you. If you use this package, you can store scanner automatically in a database and block specific IP addresses. This allows you to sync those evil IPs between multiple devices/servers. In addition you can easily create/restore iptable and ipset backups.
 
 # Install
-Run
+### Run
+
+```
+chmod u+x ./update.sh
+sudo ./update.sh
+```
+
+### Or if you want to compile step by step
 ```
 go get
 go build -o triplink
@@ -17,7 +24,7 @@ sudo mv ./triplink /usr/bin/triplink
 <b>Create a config file</b> to store the data. Every report/update will go to the given server.<br>
 <b>Note:</b> Don't use the same config file for multiple reporter instances
 ```
-# triplink createConfig -f /var/log/Tripwire21 -t <token> -r <https://a-serv.er>
+# triplink config create -t <token> -r <https://a-serv.er>
 ```
 <br>
 <b>(Report)</b> Parse the logfile and send the new scanner/spammer/hacker IPs to the server. Afterwards update the changed IPs from the server and block them (-u)<br>
@@ -37,14 +44,14 @@ sudo mv ./triplink /usr/bin/triplink
 <b>Backup</b> your <b>IPtables</b> (-t) and IPset (-s) config. Without arguments it will only backup the IPset data. You can turn this off using -s=false<br>
 
 ```
-# triplink backup -t -s
+# triplink backup create -t -s
 ```
 
 <br>
 <b>Restore</b> your <b>IPtables</b> (-t) and IPset (-s) config. Without arguments it will only restore the IPset data. You can turn this off using -s=false. Use it for example in a cronjob with @reboot to restore the IPset data after a reboot, because otherwise they will be lost<br>
 
 ```
-# triplink restore -t -s
+# triplink backup restore -t -s
 ```
 
 <br>
