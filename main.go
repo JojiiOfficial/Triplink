@@ -56,9 +56,10 @@ type argT struct {
 }
 
 var rootConfigCMD = &cli.Command{
-	Name: "config",
-	Desc: "Create, view, delete or modify a configuration file",
-	Argv: func() interface{} { return new(argHelperT) },
+	Name:    "config",
+	Aliases: []string{"c", "conf"},
+	Desc:    "Create, view, delete or modify a configuration file",
+	Argv:    func() interface{} { return new(argHelperT) },
 	Fn: func(ctx *cli.Context) error {
 		fmt.Println("Commands:\n\n" +
 			"  help     Display help information\n" +
@@ -71,9 +72,10 @@ var rootConfigCMD = &cli.Command{
 }
 
 var rootBackupCMD = &cli.Command{
-	Name: "backup",
-	Desc: "Create, delete or restore iptables+ipset backups",
-	Argv: func() interface{} { return new(argHelperT) },
+	Name:    "backup",
+	Aliases: []string{"b", "back"},
+	Desc:    "Create, delete or restore iptables+ipset backups",
+	Argv:    func() interface{} { return new(argHelperT) },
 	Fn: func(ctx *cli.Context) error {
 		fmt.Println("Commands:\n\n" +
 			"  help           Display help information\n" +
