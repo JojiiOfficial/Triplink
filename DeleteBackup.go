@@ -14,9 +14,10 @@ type delBackupT struct {
 	cli.Helper
 	BackupIPtables bool   `cli:"t,iptables" usage:"Update iptables" dft:"false"`
 	BackupIPset    bool   `cli:"s,ipset" usage:"Update ipset" dft:"false"`
+	All            bool   `cli:"a,all" usage:"Backup ipset and iptables" dft:"false"`
 	Yes            bool   `cli:"y,yes" usage:"Don't confirm deletion" dft:"false"`
 	ConfigName     string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
-	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
+	Verbose        int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var delBackupCMD = &cli.Command{
@@ -31,6 +32,10 @@ var delBackupCMD = &cli.Command{
 		}
 		argv := ctx.Argv().(*delBackupT)
 		verboseLevel = argv.Verbose
+		if argv.All {
+			argv.BackupIPset = true
+			argv.BackupIPtables = true
+		}
 		if !argv.BackupIPtables && !argv.BackupIPset {
 			LogInfo("nothing to do")
 			return nil

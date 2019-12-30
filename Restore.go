@@ -13,6 +13,7 @@ type restoreT struct {
 	cli.Helper
 	RestoreIPtables bool   `cli:"t,iptables" usage:"Restore iptables" dft:"false"`
 	RestoreIPset    bool   `cli:"s,ipset" usage:"Restore ipset" dft:"true"`
+	All             bool   `cli:"a,all" usage:"Restore ipset and iptables" dft:"false"`
 	ConfigName      string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	Verbose         int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
@@ -32,6 +33,10 @@ var restoreCMD = &cli.Command{
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
 		if logStatus != 1 {
 			return errors.New("config not found")
+		}
+		if argv.All {
+			argv.RestoreIPset = true
+			argv.RestoreIPtables = true
 		}
 		restoreIPs(configFile, argv.RestoreIPset, argv.RestoreIPtables)
 		return nil

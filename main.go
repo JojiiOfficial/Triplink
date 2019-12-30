@@ -11,7 +11,7 @@ import (
 var help = cli.HelpCommand("display help information")
 var logPrefix = ""
 var showTimeInLog = true
-var version = "0.56"
+var version = "0.6"
 var verboseLevel int
 
 type argT struct {
