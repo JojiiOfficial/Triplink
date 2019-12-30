@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/mkideal/cli"
@@ -130,7 +131,6 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) {
 		}
 	}
 
-
 	errorCreatingtriplinkChain := checkChain("triplink")
 	if errorCreatingtriplinkChain {
 		LogError("Couldn't create triplinkchain! Blocking might be unavailable")
@@ -183,7 +183,9 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) {
 			return
 		}
 	}
-	//LogInfo("Successfully added " + strconv.Itoa(addCount) + " and removed " + strconv.Itoa(remCount) + " IPs")
+	if addCount > 0 || remCount > 0 {
+		LogInfo("Successfully added " + strconv.Itoa(addCount) + " and removed " + strconv.Itoa(remCount) + " IPs")
+	}
 
 	//if activateIPset(blocklistName, config.PortsToBlock) {
 	//}
