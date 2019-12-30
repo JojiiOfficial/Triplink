@@ -43,12 +43,19 @@ var viewConfCMD = &cli.Command{
 			fmt.Println("Last fetch:\t", parseTimeStamp(conf.Filter.Since))
 		}
 
-		var logadd string
-		if len(conf.LogFile) > 0 {
-			fmt.Println("LogFile:\t", conf.LogFile)
-			logadd = "-f " + conf.LogFile
-		}
 		if verboseLevel > 0 {
+			var logadd string
+			if len(conf.LogFile) > 0 {
+				fmt.Println("LogFile:\t", conf.LogFile)
+				logadd = "-f " + conf.LogFile + " "
+			}
+			if os.Getuid() == 0 {
+				if conf.AutocreateIptables {
+					logadd += "-R true"
+				} else {
+					logadd += "-R false"
+				}
+			}
 			fmt.Println("\nRecreate this config:\ntriplink cc -t "+conf.Token, "-r", conf.Host, logadd)
 		}
 

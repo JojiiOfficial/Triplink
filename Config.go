@@ -47,10 +47,17 @@ func readConfig(file string) *Config {
 	if err != nil {
 		panic(err)
 	}
+	if len(dat) == 0 {
+		fmt.Println("Config empty. Create a new config with triplink cc -r <host> -t <token>")
+		os.Exit(1)
+		return nil
+	}
 	res := Config{}
 	err = json.Unmarshal(dat, &res)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error parsing JSON:", err.Error())
+		os.Exit(1)
+		return nil
 	}
 	return &res
 }
