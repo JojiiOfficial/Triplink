@@ -14,7 +14,7 @@ type backupT struct {
 	BackupIPtables bool   `cli:"t,iptables" usage:"Update iptables" dft:"false"`
 	BackupIPset    bool   `cli:"s,ipset" usage:"Update ipset" dft:"true"`
 	ConfigName     string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
-	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
+	Verbose        int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var backupCMD = &cli.Command{
@@ -81,7 +81,6 @@ func backupIPs(configFile string, updateIPset, updateIPtables bool) {
 					return
 				}
 			}
-
 			_, err = runCommand(nil, "ipset save "+blocklistName+" > "+ipsetFile)
 			if err != nil {
 				LogError("Couldn'd backup ipset: " + err.Error() + "-> \"" + "ipset save " + blocklistName + " > " + ipsetFile + "\"")

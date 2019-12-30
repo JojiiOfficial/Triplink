@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -14,6 +15,7 @@ type rulesT struct {
 	Delete     bool   `cli:"d,delete" usage:"Delete iptable rules for given config. Disabe blocking IPs for given config"`
 	Create     bool   `cli:"c,create" usage:"Create iptable rules for given config. Enable blocking IPs for given config"`
 	Update     bool   `cli:"u,update" usage:"Update iptables rules for given config"`
+	Yes        bool   `cli:"y,yes" usage:"Don't confirm deletion" dft:"false"`
 	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
@@ -59,7 +61,15 @@ var rulesCMD = &cli.Command{
 		_, err = os.Stat(confFile)
 		if err == nil {
 			realConf := readConfig(confFile)
-			_ = realConf
+
+			//Warn/confirm if auto rules are disabled
+			if !realConf.AutocreateIptables && !argv.Yes && (argv.Create || argv.Update) {
+				cont, i := confirmInput("Auto iptable rules are disabled for this configuration. Do you want to continue anyway? [y/n] > ", bufio.NewReader(os.Stdin))
+				if i != 1 || !cont {
+					return nil
+				}
+			}
+
 			success := false
 			bln := getBlocklistName(confFile)
 			if argv.Delete {

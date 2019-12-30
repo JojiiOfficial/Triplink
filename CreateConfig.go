@@ -8,13 +8,14 @@ import (
 
 type newConfT struct {
 	cli.Helper
-	Host       string `cli:"*r,host" usage:"Specify the host to send the data to"`
-	Token      string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
-	Overwrite  bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
-	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from"`
-	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
-	Ports      string `cli:"p,ports" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
-	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
+	Host        string `cli:"*r,host" usage:"Specify the host to send the data to"`
+	Token       string `cli:"*t,token" usage:"Specify the token required by uploading hosts"`
+	Overwrite   bool   `cli:"o,overwrite" usage:"Overwrite current config" dft:"false"`
+	LogFile     string `cli:"f,file" usage:"Specify the file to read the logs from"`
+	ConfigName  string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	Ports       string `cli:"p,ports" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
+	CreateRules bool   `cli:"R,create-rules" usage:"Auto create rules to block IPs" dft:"true"`
+	Verbose     int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var createConfCMD = &cli.Command{
@@ -25,9 +26,12 @@ var createConfCMD = &cli.Command{
 	Fn: func(ctx *cli.Context) error {
 		argv := ctx.Argv().(*newConfT)
 		verboseLevel = argv.Verbose
-		if os.Getuid() != 0 && len(argv.Ports) > 0 && argv.Ports != "0-65535" {
-			LogError("You can't specify ports. Only root is allowed to do that")
-			return nil
+		if os.Getuid() != 0 {
+			if len(argv.Ports) > 0 && argv.Ports != "0-65535" {
+				LogError("You can't specify ports. Only root is allowed to do that")
+				return nil
+			}
+			argv.CreateRules = false
 		}
 
 		if len(argv.LogFile) > 0 {
@@ -58,10 +62,11 @@ func createConf(configFile string, argv *newConfT, update bool) {
 		return
 	}
 	config := &Config{
-		Host:         argv.Host,
-		LogFile:      argv.LogFile,
-		Token:        argv.Token,
-		PortsToBlock: ports,
+		Host:               argv.Host,
+		LogFile:            argv.LogFile,
+		Token:              argv.Token,
+		PortsToBlock:       ports,
+		AutocreateIptables: argv.CreateRules,
 	}
 
 	err = config.save(configFile)

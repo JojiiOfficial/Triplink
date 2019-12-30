@@ -3,18 +3,20 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mkideal/cli"
 )
 
 type editConfT struct {
 	cli.Helper
-	Host       string `cli:"r,host" usage:"Specify the host to send the data to"`
-	Token      string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
-	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
-	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from. Use \"rem\" or \"remove\" to make it empty"`
-	Ports      string `cli:"p,ports,port" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
-	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
+	Host        string `cli:"r,host" usage:"Specify the host to send the data to"`
+	Token       string `cli:"t,token" usage:"Specify the token required by uploading hosts"`
+	ConfigName  string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
+	LogFile     string `cli:"f,file" usage:"Specify the file to read the logs from. Use \"rem\" or \"remove\" to make it empty"`
+	Ports       string `cli:"p,ports,port" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
+	CreateRules string `cli:"R,create-rules" usage:"Auto create rules to block IPs (true/false)" dft:"ign"`
+	Verbose     int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var editConfCMD = &cli.Command{
@@ -54,7 +56,30 @@ var editConfCMD = &cli.Command{
 					did = true
 				}
 			}
-			if len(argv.Ports) > 0 && os.Getuid() == 0 {
+
+			if len(argv.CreateRules) == 0 {
+				argv.CreateRules = "true"
+			}
+			if argv.CreateRules != "ign" {
+				if os.Getuid() != 0 {
+					fmt.Println("You can't create iptbales rules. (low privileges)")
+					argv.CreateRules = "ign"
+				} else {
+					if strings.ToLower(argv.CreateRules) == "true" {
+						did = true
+						realConf.AutocreateIptables = true
+					} else if strings.ToLower(argv.CreateRules) == "false" {
+						did = true
+						realConf.AutocreateIptables = false
+					} else {
+						LogError("create-rules needs a bool value (true/false)")
+						os.Exit(1)
+						return nil
+					}
+				}
+			}
+
+			if len(argv.Ports) > 0 && os.Getuid() == 0 && realConf.AutocreateIptables {
 				did = true
 				ports, err := validatePortsParam(argv.Ports)
 				if err != nil {
@@ -67,6 +92,7 @@ var editConfCMD = &cli.Command{
 					return nil
 				}
 			}
+
 			if len(argv.Host) > 0 {
 				realConf.Host = argv.Host
 				did = true

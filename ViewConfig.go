@@ -23,7 +23,9 @@ var viewConfCMD = &cli.Command{
 		verboseLevel = argv.Verbose
 
 		confFile := getConfFile(getConfPath(getHome()), argv.ConfigName)
-		fmt.Println(confFile)
+		if verboseLevel > 1 {
+			fmt.Println("Config:", confFile)
+		}
 		_, err := os.Stat(confFile)
 		if err != nil {
 			fmt.Println("No config found. Nothing to do.")
@@ -33,16 +35,20 @@ var viewConfCMD = &cli.Command{
 		conf := readConfig(confFile)
 
 		fmt.Println("-------- Configuration --------")
+		fmt.Println("File:\t\t", confFile)
 		fmt.Println("Host:\t\t", conf.Host)
 		fmt.Println("Token:\t\t", conf.Token)
-		fmt.Println("Last fetch:\t", parseTimeStamp(conf.Filter.Since))
+		if os.Getuid() == 0 {
+			fmt.Println("Auto rules:\t", conf.AutocreateIptables)
+			fmt.Println("Last fetch:\t", parseTimeStamp(conf.Filter.Since))
+		}
 
 		var logadd string
 		if len(conf.LogFile) > 0 {
 			fmt.Println("LogFile:\t", conf.LogFile)
 			logadd = "-f " + conf.LogFile
 		}
-		if verboseLevel > 0{
+		if verboseLevel > 0 {
 			fmt.Println("\nRecreate this config:\ntriplink cc -t "+conf.Token, "-r", conf.Host, logadd)
 		}
 

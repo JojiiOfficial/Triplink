@@ -14,12 +14,13 @@ import (
 
 //Config the global config struct
 type Config struct {
-	Host          string      `json:"host"`
-	LogFile       string      `json:"logfile"`
-	Token         string      `json:"token"`
-	Filter        FetchFilter `json:"fetchFilter"`
-	ShowTimeInLog bool        `json:"showLogTime"`
-	PortsToBlock  string      `json:"portsToBlock"`
+	Host               string      `json:"host"`
+	LogFile            string      `json:"logfile"`
+	Token              string      `json:"token"`
+	Filter             FetchFilter `json:"fetchFilter"`
+	ShowTimeInLog      bool        `json:"showLogTime"`
+	PortsToBlock       string      `json:"portsToBlock"`
+	AutocreateIptables bool        `json:"createIPtableRules"`
 }
 
 func getConfPath(homeDir string) string {
@@ -75,6 +76,11 @@ func validateLogFile(logfile string) bool {
 }
 
 func createAndValidateConfigFile(confName string) (int, string) {
+	if len(confName) == 0 {
+		LogError("No config name given")
+		os.Exit(1)
+		return -1, ""
+	}
 	if !strings.HasSuffix(confName, ".json") {
 		confName += ".json"
 	}
@@ -158,7 +164,7 @@ func isPortRangeValid(portrange string) bool {
 		if isPortValid(ports[0]) && isPortValid(ports[1]) {
 			start, _ = strconv.Atoi(ports[0])
 			end, _ = strconv.Atoi(ports[1])
-			if end > start{
+			if end > start {
 				return true
 			}
 		}

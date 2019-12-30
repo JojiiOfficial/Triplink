@@ -133,8 +133,12 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) bool {
 		}
 	}
 
-	if !createIPtableRules(blocklistName, config) {
-		return false
+	if config.AutocreateIptables {
+		if !createIPtableRules(blocklistName, config) {
+			return false
+		}
+	} else if verboseLevel > 1 {
+		LogInfo("Skipping iptables-rules check due configuration")
 	}
 
 	if addCount > 0 || remCount > 0 {
