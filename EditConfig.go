@@ -28,7 +28,7 @@ var editConfCMD = &cli.Command{
 			fmt.Println("Couldn't retrieve homeDir!")
 			return nil
 		}
-		if os.Getuid() != 0 && len(argv.Ports) > 0 {
+		if os.Getuid() != 0 && len(argv.Ports) > 0 && argv.Ports != "0-65535" {
 			LogError("You can't specify ports. Only root is allowed to do that")
 			return nil
 		}
@@ -52,7 +52,7 @@ var editConfCMD = &cli.Command{
 					did = true
 				}
 			}
-			if len(argv.Ports) > 0 {
+			if len(argv.Ports) > 0 && os.Getuid() == 0 {
 				did = true
 				ports, err := validatePortsParam(argv.Ports)
 				if err != nil {
