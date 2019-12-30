@@ -14,6 +14,7 @@ type editConfT struct {
 	ConfigName string `cli:"C,config" usage:"Specify the config to use" dft:"config.json"`
 	LogFile    string `cli:"f,file" usage:"Specify the file to read the logs from. Use \"rem\" or \"remove\" to make it empty"`
 	Ports      string `cli:"p,ports,port" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
+	Verbose    int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
 }
 
 var editConfCMD = &cli.Command{
@@ -58,7 +59,7 @@ var editConfCMD = &cli.Command{
 				if err != nil {
 					return err
 				}
-				if clearIptableRules(getBlocklistName(argv.ConfigName), realConf.PortsToBlock) {
+				if deleteBlocklistIptableRules(getBlocklistName(argv.ConfigName)) {
 					realConf.PortsToBlock = ports
 					blockIPs([]IPList{}, getBlocklistName(argv.ConfigName), realConf)
 				} else {
@@ -95,26 +96,38 @@ var editConfCMD = &cli.Command{
 	},
 }
 
-func clearIptableRules(blocklistName, oldPorts string) bool {
+func deleteBlocklistIptableRules(blocklistName string) bool {
+	blocklistTCPUDPname := blocklistName + "_tcp_udp"
 	commandso := []iptableCommand{
-		//triplink -> bloclist_config if not udp
+		//remove triplink -> bloclist_config
 		iptableCommand{
 			"D",
 			"triplink ! -p udp -j " + blocklistName,
 		},
-		//DROP if not tcp
+		//remove triplink -> bloclist_config_tcp_udp
+		iptableCommand{
+			"D",
+			"triplink -j " + blocklistTCPUDPname,
+		},
+		//Flush blocklist_config
 		iptableCommand{
 			"F",
 			blocklistName,
 		},
-		//DROP TCP PORTS
+		//Flush blocklist_config_tcp_udp
 		iptableCommand{
-			"D",
-			"triplink -p tcp -m set --match-set " + blocklistName + " src -m multiport --dports " + oldPorts + " -j DROP",
+			"F",
+			blocklistTCPUDPname,
 		},
+		//Flush blocklist_config
 		iptableCommand{
-			"D",
-			"triplink -p udp -m set --match-set " + blocklistName + " src -m multiport --dports " + oldPorts + " -j DROP",
+			"X",
+			blocklistName,
+		},
+		//Flush blocklist_config_tcp_udp
+		iptableCommand{
+			"X",
+			blocklistTCPUDPname,
 		},
 	}
 

@@ -136,9 +136,18 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) {
 		LogError("Couldn't create triplinkchain! Blocking might be unavailable")
 		return
 	}
+
+	//check/create blocklistname-chain
 	errorCreatingblnChain := checkChain(blocklistName)
 	if errorCreatingblnChain {
 		LogError("Couldn't create blocklist-chain! Blocking might be unavailable")
+		return
+	}
+	blocklistTCPUDPname := blocklistName + "_tcp_udp"
+	//check/create blocklistname_-chain
+	errorCreatingblnportChain := checkChain(blocklistTCPUDPname)
+	if errorCreatingblnportChain {
+		LogError("Couldn't create blocklist_tcp_udp-chain! Blocking might be unavailable")
 		return
 	}
 
@@ -155,8 +164,13 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) {
 		},
 		//DROP if not tcp
 		iptableCommand{
-			"A",
+			"I",
 			blocklistName + " ! -p tcp -m set --match-set " + blocklistName + " src -j DROP",
+		},
+		//triplink -> bloclist_config if not udp
+		iptableCommand{
+			"I",
+			"triplink -j " + blocklistTCPUDPname,
 		},
 		//RETURN back to triplink
 		iptableCommand{
@@ -166,11 +180,15 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) {
 		//DROP TCP PORTS
 		iptableCommand{
 			"I",
-			"triplink -p tcp -m set --match-set " + blocklistName + " src -m multiport --dports " + config.PortsToBlock + " -j DROP",
+			blocklistTCPUDPname + " -p tcp -m set --match-set " + blocklistName + " src -m multiport --dports " + config.PortsToBlock + " -j DROP",
 		},
 		iptableCommand{
 			"I",
-			"triplink -p udp -m set --match-set " + blocklistName + " src -m multiport --dports " + config.PortsToBlock + " -j DROP",
+			blocklistTCPUDPname + " -p udp -m set --match-set " + blocklistName + " src -m multiport --dports " + config.PortsToBlock + " -j DROP",
+		},
+		iptableCommand{
+			"A",
+			blocklistTCPUDPname + " -j RETURN",
 		},
 		iptableCommand{
 			"A",
