@@ -66,6 +66,7 @@ func createConf(configFile string, argv *newConfT, update bool) {
 	fmt.Println(ports)
 
 	if os.Getuid() == 0 {
+		setupIPset(true)
 		bln := getBlocklistName(configFile)
 		blockIPs([]IPList{}, bln, config)
 	}

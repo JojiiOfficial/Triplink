@@ -130,6 +130,7 @@ func blockIPs(ips []IPList, blocklistName string, config *Config) {
 		}
 	}
 
+
 	errorCreatingtriplinkChain := checkChain("triplink")
 	if errorCreatingtriplinkChain {
 		LogError("Couldn't create triplinkchain! Blocking might be unavailable")
