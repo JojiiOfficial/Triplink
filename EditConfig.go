@@ -96,7 +96,6 @@ var editConfCMD = &cli.Command{
 }
 
 func clearIptableRules(blocklistName, oldPorts string) bool {
-	fmt.Println(oldPorts)
 	commandso := []iptableCommand{
 		//triplink -> bloclist_config if not udp
 		iptableCommand{
