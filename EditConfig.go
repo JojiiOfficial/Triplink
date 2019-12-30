@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -17,6 +18,23 @@ type editConfT struct {
 	Ports       string `cli:"p,ports,port" usage:"Specify which ports will be blocked on IP-fetches" dft:"0-65535"`
 	CreateRules string `cli:"R,create-rules" usage:"Auto create rules to block IPs (true/false)" dft:"ign"`
 	Verbose     int    `cli:"v,verbose" usage:"Specify how much logs should be displayed" dft:"0"`
+}
+
+func (argv *editConfT) Validate(ctx *cli.Context) error {
+	if len(strings.Trim(argv.Host, " ")) > 0 {
+		match, err := isURL(argv.Host)
+		if err != nil {
+			return err
+		}
+		if !match {
+			return errors.New("Host must be an URL")
+		}
+	}
+	tknLen := len(strings.Trim(argv.Token, " "))
+	if tknLen > 0 && tknLen < 64 {
+		return errors.New("Token length invalid")
+	}
+	return nil
 }
 
 var editConfCMD = &cli.Command{
