@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/mkideal/cli"
@@ -62,18 +61,6 @@ func createConf(configFile string, argv *newConfT, update bool) {
 		LogFile:      argv.LogFile,
 		Token:        argv.Token,
 		PortsToBlock: ports,
-	}
-	fmt.Println(ports)
-
-	if os.Getuid() == 0 {
-		if !isIpsetInstalled(true) {
-			return
-		}
-
-		blocklistName := getBlocklistName(argv.ConfigName)
-		setupIPset(blocklistName)
-		bln := getBlocklistName(configFile)
-		blockIPs([]IPList{}, bln, config)
 	}
 
 	err = config.save(configFile)

@@ -61,7 +61,7 @@ var editConfCMD = &cli.Command{
 				}
 				if deleteBlocklistIptableRules(getBlocklistName(argv.ConfigName)) {
 					realConf.PortsToBlock = ports
-					blockIPs([]IPList{}, getBlocklistName(argv.ConfigName), realConf)
+					createIPtableRules(getBlocklistName(argv.ConfigName), realConf)
 				} else {
 					return nil
 				}
@@ -94,48 +94,4 @@ var editConfCMD = &cli.Command{
 		}
 		return nil
 	},
-}
-
-func deleteBlocklistIptableRules(blocklistName string) bool {
-	blocklistTCPUDPname := blocklistName + "_tcp_udp"
-	commandso := []iptableCommand{
-		//remove triplink -> bloclist_config
-		iptableCommand{
-			"D",
-			"triplink ! -p udp -j " + blocklistName,
-		},
-		//remove triplink -> bloclist_config_tcp_udp
-		iptableCommand{
-			"D",
-			"triplink -j " + blocklistTCPUDPname,
-		},
-		//Flush blocklist_config
-		iptableCommand{
-			"F",
-			blocklistName,
-		},
-		//Flush blocklist_config_tcp_udp
-		iptableCommand{
-			"F",
-			blocklistTCPUDPname,
-		},
-		//Flush blocklist_config
-		iptableCommand{
-			"X",
-			blocklistName,
-		},
-		//Flush blocklist_config_tcp_udp
-		iptableCommand{
-			"X",
-			blocklistTCPUDPname,
-		},
-	}
-
-	for _, cmd := range commandso {
-		if !runIptablesAction(cmd, true) {
-			continue
-		}
-	}
-	runCommand(nil, "iptables -X "+blocklistName)
-	return true
 }
