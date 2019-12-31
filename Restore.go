@@ -31,7 +31,7 @@ var restoreCMD = &cli.Command{
 		argv := ctx.Argv().(*restoreT)
 		verboseLevel = argv.Verbose
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
-		if logStatus != 1 {
+		if logStatus < 0 {
 			return errors.New("config not found")
 		}
 		if argv.All {

@@ -41,7 +41,7 @@ var delBackupCMD = &cli.Command{
 			return nil
 		}
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
-		if logStatus != 1 {
+		if logStatus < 0 {
 			return errors.New("config not found")
 		}
 		delBackup(configFile, argv.BackupIPset, argv.BackupIPtables, argv.Yes)

@@ -34,7 +34,7 @@ var backupCMD = &cli.Command{
 			return nil
 		}
 		logStatus, configFile := createAndValidateConfigFile(argv.ConfigName)
-		if logStatus != 1 {
+		if logStatus < 0 {
 			return errors.New("config not found")
 		}
 		backupIPs(configFile, argv.BackupIPset, argv.BackupIPtables)
