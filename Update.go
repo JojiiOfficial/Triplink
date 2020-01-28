@@ -212,7 +212,7 @@ func hasBlocklist(blocklistName string) bool {
 }
 
 func createBlocklist(blocklistName string) bool {
-	_, err := runCommand(nil, "ipset create "+blocklistName+" nethash")
+	_, err := runCommand(nil, "ipset create "+blocklistName+" nethash --maxelem 4000000")
 	return err == nil
 }
 
